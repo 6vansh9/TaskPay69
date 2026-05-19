@@ -1,0 +1,26 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if ((profile as { role: string } | null)?.role !== 'admin') {
+    return NextResponse.json({ error: 'Admin only' }, { status: 403 })
+  }
+
+  const { data, error } = await supabase
+    .from('disputes')
+    .select(`
+      *,
+      contract:contract_id(id, amount, job:job_id(title)),
+      raised_by_profile:raised_by(id, full_name, email)
+    `)
+    .eq('status', 'open')
+    .order('created_at', { ascending: true })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data ?? [])
+}
