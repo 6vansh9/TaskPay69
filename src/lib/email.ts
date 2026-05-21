@@ -46,7 +46,7 @@ export async function sendAdminDisputeAlertEmail(opts: {
             <td style="padding:10px 0;color:#111827;font-size:14px">${opts.reason}</td>
           </tr>
         </table>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/admin/disputes"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/disputes"
            style="display:inline-block;background:#f59e0b;color:#fff;padding:12px 28px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:14px">
           Review Dispute →
         </a>
