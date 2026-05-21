@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendDisputeEmail } from '@/lib/email'
+import { sendDisputeEmail, sendAdminDisputeAlertEmail } from '@/lib/email'
 
 export async function GET(_req: NextRequest) {
   const supabase = await createClient()
@@ -38,11 +38,11 @@ export async function POST(request: NextRequest) {
   // Verify user is a party to the contract
   const { data: contract } = await supabase
     .from('contracts')
-    .select('client_id, freelancer_id, status, razorpay_payment_id')
+    .select('client_id, freelancer_id, status')
     .eq('id', contract_id)
     .single()
 
-  const c = contract as { client_id: string; freelancer_id: string; status: string; razorpay_payment_id: string | null } | null
+  const c = contract as { client_id: string; freelancer_id: string; status: string } | null
   if (!c || (c.client_id !== user.id && c.freelancer_id !== user.id)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
@@ -83,21 +83,33 @@ export async function POST(request: NextRequest) {
   })
 
   // Email both parties
-  const { data: parties } = await supabase
-    .from('profiles')
-    .select('id, full_name, email')
-    .in('id', [c.client_id, c.freelancer_id])
+  const [{ data: parties }, { data: jobData }, { data: adminProfiles }] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, email, role').in('id', [c.client_id, c.freelancer_id]),
+    supabase.from('contracts').select('amount, job:job_id(title)').eq('id', contract_id).single(),
+    supabase.from('profiles').select('id').eq('role', 'admin'),
+  ])
 
-  const { data: jobData } = await supabase
-    .from('contracts')
-    .select('job:job_id(title)')
-    .eq('id', contract_id)
-    .single()
-
-  const jobTitle = (jobData as unknown as { job: { title: string } | null })?.job?.title ?? 'Contract'
+  const jobTitle = (jobData as unknown as { job: { title: string } | null } | null)?.job?.title ?? 'Contract'
+  const contractAmount = (jobData as unknown as { amount: number } | null)?.amount ?? 0
   const raiser = (parties ?? []).find(p => p.id === user.id)
-  const raiserName = (raiser as { full_name: string } | undefined)?.full_name ?? 'A party'
+  const raiserProfile = raiser as { id: string; full_name: string; email: string; role: string } | undefined
+  const raiserName = raiserProfile?.full_name ?? 'A party'
+  const raiserRole = raiserProfile?.role ?? 'user'
 
+  // Notify admin users in-app
+  if ((adminProfiles ?? []).length > 0) {
+    await supabase.from('notifications').insert(
+      (adminProfiles ?? []).map(a => ({
+        user_id: a.id,
+        title: '⚠️ New dispute raised',
+        message: `${raiserName} raised a dispute on "${jobTitle}". Review required.`,
+        type: 'dispute',
+        link: '/admin/disputes',
+      }))
+    )
+  }
+
+  // Email parties + admin
   for (const party of (parties ?? [])) {
     const p = party as { id: string; full_name: string; email: string }
     sendDisputeEmail({
@@ -109,6 +121,16 @@ export async function POST(request: NextRequest) {
       reason: reason.trim(),
     }).catch(() => {})
   }
+
+  sendAdminDisputeAlertEmail({
+    jobTitle,
+    raisedByName: raiserName,
+    raisedByRole: raiserRole,
+    reason: reason.trim(),
+    amount: contractAmount,
+    contractId: contract_id,
+    disputeId: (dispute as { id: string }).id,
+  }).catch(() => {})
 
   return NextResponse.json(dispute, { status: 201 })
 }

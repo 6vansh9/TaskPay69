@@ -31,13 +31,36 @@ function LoginForm() {
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
-    setLoading(false)
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
     if (error) {
+      setLoading(false)
       toast.error(error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message)
       return
     }
-    router.push(next)
+
+    const userId = authData.user?.id
+    if (userId) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, role, onboarding_complete')
+        .eq('id', userId)
+        .maybeSingle()
+
+      const name = profile?.full_name?.split(' ')[0] ?? 'there'
+      toast.success(`Welcome back, ${name}!`)
+
+      if (!profile?.onboarding_complete) {
+        const dest = profile?.role === 'client' ? '/onboarding/client' : '/onboarding/freelancer'
+        router.push(dest)
+      } else if (profile?.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push(next)
+      }
+    } else {
+      router.push(next)
+    }
+    setLoading(false)
     router.refresh()
   }
 
@@ -53,10 +76,10 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-indigo-600 to-violet-700 flex-col justify-between p-12 text-white">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#14a800] to-[#0a6300] flex-col justify-between p-12 text-foreground">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-            <Briefcase className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-card/20 flex items-center justify-center">
+            <Briefcase className="w-4 h-4 text-foreground" />
           </div>
           <span className="text-xl font-bold">TaskPay</span>
         </Link>
@@ -65,37 +88,37 @@ function LoginForm() {
           <h1 className="text-4xl font-bold leading-tight mb-4">
             Welcome back.<br />Your next project awaits.
           </h1>
-          <p className="text-indigo-200 text-lg">
+          <p className="text-green-100 text-lg">
             Thousands of clients and freelancers trust TaskPay to get work done.
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">
           {[['10K+', 'Freelancers'], ['5K+', 'Jobs Posted'], ['₹2Cr+', 'Paid Out']].map(([val, label]) => (
-            <div key={label} className="bg-white/10 rounded-xl p-4">
+            <div key={label} className="bg-card/10 rounded-xl p-4">
               <div className="text-2xl font-bold">{val}</div>
-              <div className="text-indigo-200 text-sm">{label}</div>
+              <div className="text-green-100 text-sm">{label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
+      <div className="flex-1 flex items-center justify-center p-6 bg-background">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex justify-center mb-8">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-[#14a800] flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-foreground" />
               </div>
-              <span className="text-xl font-bold text-gray-900">TaskPay</span>
+              <span className="text-xl font-bold text-foreground">TaskPay</span>
             </Link>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in to your account</h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-1">Sign in to your account</h2>
+          <p className="text-sm text-muted-foreground mb-6">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="text-indigo-600 font-medium hover:underline">Sign up free</Link>
+            <Link href="/auth/register" className="text-[#14a800] font-medium hover:underline">Sign up free</Link>
           </p>
 
           {/* Google */}
@@ -114,8 +137,8 @@ function LoginForm() {
           </button>
 
           <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center text-xs text-gray-400 bg-gray-50 px-2 mx-auto w-fit">or continue with email</div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs text-[var(--faint)] bg-background px-2 mx-auto w-fit">or continue with email</div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -128,7 +151,7 @@ function LoginForm() {
             <div>
               <div className="flex justify-between mb-1.5">
                 <label className="label !mb-0">Password</label>
-                <Link href="/auth/reset-password" className="text-xs text-indigo-600 hover:underline">Forgot password?</Link>
+                <Link href="/auth/reset-password" className="text-xs text-[#14a800] hover:underline">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input
@@ -138,7 +161,7 @@ function LoginForm() {
                   {...register('password')}
                 />
                 <button type="button" onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--faint)] hover:text-muted-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>

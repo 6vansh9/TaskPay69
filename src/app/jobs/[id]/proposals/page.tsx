@@ -57,24 +57,24 @@ function ProposalsContent() {
   ]
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f7f7f7]">
+    <div className="flex flex-col min-h-screen bg-card">
       <Header />
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}
-        <nav className="text-sm text-[#6b6b6b] mb-4 flex items-center gap-1">
+        <nav className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
           <Link href="/dashboard" className="hover:text-[#14a800]">Dashboard</Link>
           <ChevronRight className="w-3.5 h-3.5" />
           <Link href={`/jobs/${jobId}`} className="hover:text-[#14a800] truncate max-w-xs">{jobTitle}</Link>
           <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-[#1d1d1d]">Proposals</span>
+          <span className="text-foreground">Proposals</span>
         </nav>
 
         <div className="card">
           {/* Header */}
-          <div className="p-5 border-b border-[#e0e0e0] flex items-center justify-between flex-wrap gap-3">
+          <div className="p-5 border-b border-border flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h1 className="font-bold text-[#1d1d1d] text-lg">Proposals</h1>
-              <p className="text-sm text-[#6b6b6b] mt-0.5 flex items-center gap-1">
+              <h1 className="font-bold text-foreground text-lg">Proposals</h1>
+              <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
                 <Users className="w-3.5 h-3.5" />
                 {isLoading ? '…' : `${proposals?.length ?? 0} total · ${shortlistedCount} shortlisted`}
               </p>
@@ -82,7 +82,7 @@ function ProposalsContent() {
 
             {/* Sort */}
             <div className="flex items-center gap-2">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#6b6b6b]" />
+              <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
               <select
                 className="input w-auto text-xs py-1.5"
                 value={sort}
@@ -107,7 +107,7 @@ function ProposalsContent() {
               >
                 {label}
                 {count !== null && count > 0 && (
-                  <span className="ml-1.5 bg-[#e2f0d9] text-[#0a6300] text-[11px] font-bold rounded-full px-1.5 py-0.5">
+                  <span className="ml-1.5 bg-[#14a800/20] text-[#14a800] text-[11px] font-bold rounded-full px-1.5 py-0.5">
                     {count}
                   </span>
                 )}
@@ -126,11 +126,11 @@ function ProposalsContent() {
 
             {!isLoading && filtered.length === 0 && (
               <div className="text-center py-12">
-                <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <h3 className="font-semibold text-[#1d1d1d] mb-1">
+                <Users className="w-10 h-10 text-[var(--faint)] mx-auto mb-3" />
+                <h3 className="font-semibold text-foreground mb-1">
                   {tab === 'shortlisted' ? 'No shortlisted proposals yet' : 'No proposals yet'}
                 </h3>
-                <p className="text-sm text-[#6b6b6b]">
+                <p className="text-sm text-muted-foreground">
                   {tab === 'shortlisted' ? 'Shortlist candidates to compare them here.' : 'Share your job post to attract freelancers.'}
                 </p>
               </div>

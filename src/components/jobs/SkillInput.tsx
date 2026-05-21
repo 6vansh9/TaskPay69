@@ -41,9 +41,9 @@ export default function SkillInput({ value, onChange, max = 10, placeholder = 'A
 
   return (
     <div className="relative">
-      <div className={`min-h-[44px] flex flex-wrap gap-1.5 p-2 rounded-lg border bg-white transition-all ${focused ? 'border-[#14a800] shadow-[0_0_0_3px_rgb(20_168_0_/_0.12)]' : 'border-[#e0e0e0]'}`}>
+      <div className={`min-h-[44px] flex flex-wrap gap-1.5 p-2 rounded-lg border bg-card transition-all ${focused ? 'border-[#14a800] shadow-[0_0_0_3px_rgb(20_168_0_/_0.12)]' : 'border-border'}`}>
         {value.map(skill => (
-          <span key={skill} className="inline-flex items-center gap-1 bg-[#e2f0d9] text-[#0a6300] text-xs font-medium px-2.5 py-1 rounded-full">
+          <span key={skill} className="inline-flex items-center gap-1 bg-[#14a800/20] text-[#14a800] text-xs font-medium px-2.5 py-1 rounded-full">
             {skill}
             <button type="button" onClick={() => remove(skill)} className="hover:text-red-600 transition-colors">
               <X className="w-3 h-3" />
@@ -65,19 +65,19 @@ export default function SkillInput({ value, onChange, max = 10, placeholder = 'A
 
       {/* Suggestions dropdown */}
       {focused && filtered.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e0e0e0] rounded-lg shadow-md z-20 max-h-44 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-md z-20 max-h-44 overflow-y-auto">
           {filtered.slice(0, 8).map(s => (
             <button
               key={s} type="button"
               onMouseDown={() => add(s)}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#f7f7f7] text-[#1d1d1d]"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-card text-foreground"
             >
               {s}
             </button>
           ))}
         </div>
       )}
-      <p className="text-xs text-[#6b6b6b] mt-1">{value.length}/{max} skills · Press Enter or comma to add</p>
+      <p className="text-xs text-muted-foreground mt-1">{value.length}/{max} skills · Press Enter or comma to add</p>
     </div>
   )
 }

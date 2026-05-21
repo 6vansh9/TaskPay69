@@ -5,13 +5,19 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import SkillInput from '@/components/jobs/SkillInput'
 import toast from 'react-hot-toast'
-import { Camera, Plus, Trash2, Save, ArrowLeft, Loader2 } from 'lucide-react'
+import { Camera, Plus, Trash2, Save, ArrowLeft, Loader2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 
 interface PortfolioItem {
   title: string
   description: string
   url: string
+}
+
+interface EducationEntry {
+  degree?: string
+  institution?: string
+  year?: string | number
 }
 
 interface Profile {
@@ -29,6 +35,10 @@ interface Profile {
   company_name: string | null
   industry: string | null
   website: string | null
+  experience_years: number | null
+  linkedin_url: string | null
+  github_url: string | null
+  education: EducationEntry | EducationEntry[] | null
 }
 
 export default function EditProfilePage() {
@@ -54,6 +64,13 @@ export default function EditProfilePage() {
   const [companyName, setCompanyName] = useState('')
   const [industry, setIndustry]       = useState('')
   const [website, setWebsite]         = useState('')
+  // Freelancer extended fields
+  const [experienceYears, setExperienceYears] = useState('')
+  const [linkedinUrl, setLinkedinUrl]         = useState('')
+  const [githubUrl, setGithubUrl]             = useState('')
+  const [eduDegree, setEduDegree]             = useState('')
+  const [eduInstitution, setEduInstitution]   = useState('')
+  const [eduYear, setEduYear]                 = useState('')
 
   useEffect(() => {
     fetch('/api/profile')
@@ -72,6 +89,15 @@ export default function EditProfilePage() {
         setCompanyName(p.company_name ?? '')
         setIndustry(p.industry ?? '')
         setWebsite(p.website ?? '')
+        setExperienceYears(p.experience_years ? String(p.experience_years) : '')
+        setLinkedinUrl(p.linkedin_url ?? '')
+        setGithubUrl(p.github_url ?? '')
+        const edu = p.education
+          ? (Array.isArray(p.education) ? p.education[0] : p.education)
+          : null
+        setEduDegree(edu?.degree ?? '')
+        setEduInstitution(edu?.institution ?? '')
+        setEduYear(edu?.year ? String(edu.year) : '')
         setLoading(false)
       })
       .catch(() => { toast.error('Failed to load profile'); setLoading(false) })
@@ -108,6 +134,14 @@ export default function EditProfilePage() {
           skills,
           is_available: available,
           portfolio,
+          experience_years: experienceYears ? Number(experienceYears) : null,
+          linkedin_url: linkedinUrl.trim() || null,
+          github_url: githubUrl.trim() || null,
+          education: eduDegree.trim() ? [{
+            degree: eduDegree.trim(),
+            institution: eduInstitution.trim(),
+            year: eduYear.trim(),
+          }] : null,
         }
       : {
           full_name: fullName.trim(),
@@ -141,7 +175,7 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-[#14a800] mx-auto" />
@@ -154,27 +188,27 @@ export default function EditProfilePage() {
   const isFreelancer = profile.role === 'freelancer'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         {/* Back link */}
-        <Link href={`/profile/${profile.id}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#14a800] mb-6 transition-colors">
+        <Link href={`/profile/${profile.id}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#14a800] mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to profile
         </Link>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Edit Profile</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-8">Edit Profile</h1>
 
         <div className="space-y-6">
 
           {/* Avatar */}
           <div className="card p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Profile Photo</h2>
+            <h2 className="font-semibold text-foreground mb-4">Profile Photo</h2>
             <div className="flex items-center gap-5">
               <div className="relative flex-shrink-0">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-700">
+                  <div className="w-20 h-20 rounded-full bg-[#14a800/20] flex items-center justify-center text-3xl font-bold text-[#14a800]">
                     {(fullName || profile.full_name || '?')[0].toUpperCase()}
                   </div>
                 )}
@@ -186,12 +220,12 @@ export default function EditProfilePage() {
                   aria-label="Change photo"
                 >
                   {uploadingAvatar
-                    ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
-                    : <Camera className="w-3.5 h-3.5 text-white" />}
+                    ? <Loader2 className="w-3.5 h-3.5 text-foreground animate-spin" />
+                    : <Camera className="w-3.5 h-3.5 text-foreground" />}
                 </button>
               </div>
               <div>
-                <p className="text-sm text-gray-600">JPEG, PNG or WebP · Max 5 MB</p>
+                <p className="text-sm text-muted-foreground">JPEG, PNG or WebP · Max 5 MB</p>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
@@ -213,39 +247,39 @@ export default function EditProfilePage() {
 
           {/* Basic Info */}
           <div className="card p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">Basic Information</h2>
+            <h2 className="font-semibold text-foreground">Basic Information</h2>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Full Name *</label>
               <input className="input w-full" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" />
             </div>
             {isFreelancer && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Professional Title</label>
+                <label className="block text-sm font-medium text-foreground/80 mb-1">Professional Title</label>
                 <input className="input w-full" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Full Stack Developer" />
               </div>
             )}
             {!isFreelancer && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Company Name</label>
                   <input className="input w-full" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Acme Corp" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Industry</label>
                   <input className="input w-full" value={industry} onChange={e => setIndustry(e.target.value)} placeholder="e.g. FinTech, HealthTech" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Website</label>
                   <input className="input w-full" type="url" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://yourcompany.com" />
                 </div>
               </>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Location</label>
               <input className="input w-full" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Bangalore, India" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground/80 mb-1">
                 Bio {isFreelancer ? '(tell clients about your expertise)' : '(tell freelancers about your company)'}
               </label>
               <textarea
@@ -256,7 +290,7 @@ export default function EditProfilePage() {
                 placeholder={isFreelancer ? 'Describe your experience, specializations, and what makes you stand out…' : 'Describe your company and the kind of work you hire for…'}
                 maxLength={600}
               />
-              <p className="text-xs text-gray-400 mt-1">{bio.length}/600</p>
+              <p className="text-xs text-[var(--faint)] mt-1">{bio.length}/600</p>
             </div>
           </div>
 
@@ -264,11 +298,11 @@ export default function EditProfilePage() {
           {isFreelancer && (
             <>
               <div className="card p-6 space-y-4">
-                <h2 className="font-semibold text-gray-900">Rate & Availability</h2>
+                <h2 className="font-semibold text-foreground">Rate & Availability</h2>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hourly Rate (₹)</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Hourly Rate (₹)</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">₹</span>
                     <input
                       className="input w-full pl-7"
                       type="number"
@@ -279,7 +313,7 @@ export default function EditProfilePage() {
                       placeholder="e.g. 1500"
                     />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">Per hour rate shown on your profile and proposals.</p>
+                  <p className="text-xs text-[var(--faint)] mt-1">Per hour rate shown on your profile and proposals.</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -287,26 +321,100 @@ export default function EditProfilePage() {
                     role="switch"
                     aria-checked={available}
                     onClick={() => setAvailable(v => !v)}
-                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${available ? 'bg-[#14a800]' : 'bg-gray-300'}`}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${available ? 'bg-[#14a800]' : 'bg-muted'}`}
                   >
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${available ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full shadow-sm transition-transform ${available ? 'translate-x-5' : 'translate-x-0'}`} />
                   </button>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{available ? 'Available for work' : 'Not available'}</p>
-                    <p className="text-xs text-gray-500">Shown as a green badge on your profile.</p>
+                    <p className="text-sm font-medium text-foreground">{available ? 'Available for work' : 'Not available'}</p>
+                    <p className="text-xs text-muted-foreground">Shown as a green badge on your profile.</p>
                   </div>
                 </div>
               </div>
 
               <div className="card p-6">
-                <h2 className="font-semibold text-gray-900 mb-4">Skills</h2>
+                <h2 className="font-semibold text-foreground mb-4">Skills</h2>
                 <SkillInput value={skills} onChange={setSkills} max={15} />
+              </div>
+
+              {/* Experience + LinkedIn + GitHub */}
+              <div className="card p-6 space-y-4">
+                <h2 className="font-semibold text-foreground">Experience & Links</h2>
+                <div>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Years of Experience</label>
+                  <input
+                    className="input w-full"
+                    type="number"
+                    min={0}
+                    max={50}
+                    value={experienceYears}
+                    onChange={e => setExperienceYears(e.target.value)}
+                    placeholder="e.g. 3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">LinkedIn URL</label>
+                  <input
+                    className="input w-full"
+                    type="url"
+                    value={linkedinUrl}
+                    onChange={e => setLinkedinUrl(e.target.value)}
+                    placeholder="https://linkedin.com/in/yourname"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">GitHub URL</label>
+                  <input
+                    className="input w-full"
+                    type="url"
+                    value={githubUrl}
+                    onChange={e => setGithubUrl(e.target.value)}
+                    placeholder="https://github.com/yourname"
+                  />
+                </div>
+              </div>
+
+              {/* Education */}
+              <div className="card p-6 space-y-4">
+                <h2 className="font-semibold text-foreground">Education</h2>
+                <div>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Degree / Qualification</label>
+                  <input
+                    className="input w-full"
+                    value={eduDegree}
+                    onChange={e => setEduDegree(e.target.value)}
+                    placeholder="e.g. B.Tech Computer Science"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/80 mb-1">Institution</label>
+                    <input
+                      className="input w-full"
+                      value={eduInstitution}
+                      onChange={e => setEduInstitution(e.target.value)}
+                      placeholder="e.g. IIT Delhi"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/80 mb-1">Year</label>
+                    <input
+                      className="input w-full"
+                      type="number"
+                      min={1990}
+                      max={2030}
+                      value={eduYear}
+                      onChange={e => setEduYear(e.target.value)}
+                      placeholder="e.g. 2024"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Portfolio */}
               <div className="card p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-semibold text-gray-900">Portfolio</h2>
+                  <h2 className="font-semibold text-foreground">Portfolio</h2>
                   <button
                     type="button"
                     onClick={addPortfolioItem}
@@ -317,15 +425,15 @@ export default function EditProfilePage() {
                   </button>
                 </div>
                 {portfolio.length === 0 && (
-                  <p className="text-sm text-gray-400 text-center py-4">
+                  <p className="text-sm text-[var(--faint)] text-center py-4">
                     No portfolio items yet. Add links to your best work.
                   </p>
                 )}
                 <div className="space-y-4">
                   {portfolio.map((item, i) => (
-                    <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                    <div key={i} className="border border-border rounded-xl p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Item {i + 1}</span>
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Item {i + 1}</span>
                         <button type="button" onClick={() => removePortfolio(i)} className="text-red-400 hover:text-red-600">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -369,6 +477,24 @@ export default function EditProfilePage() {
             </button>
             <Link href={`/profile/${profile.id}`} className="btn btn-secondary">
               Cancel
+            </Link>
+          </div>
+
+          {/* Danger Zone — link to Settings */}
+          <div className="card border-red-900/50 p-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-red-400 mb-0.5 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" /> Danger Zone
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Account deletion and other sensitive actions are managed in Settings.
+              </p>
+            </div>
+            <Link
+              href="/settings"
+              className="btn btn-sm border border-red-800/50 text-red-600 hover:bg-red-950/30 bg-card self-start sm:self-center flex-shrink-0"
+            >
+              Go to Settings
             </Link>
           </div>
 

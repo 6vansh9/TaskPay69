@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Star, MapPin, Bookmark, ChevronDown, ChevronUp, Check, Shield, GraduationCap } from 'lucide-react'
 import { formatCurrency, timeAgo, getInitials, cn } from '@/lib/utils'
-import { useShortlistProposal, useHireFreelancer, type ProposalWithProfile } from '@/lib/hooks'
+import { useShortlistProposal, useHireFreelancer, useDeclineProposal, type ProposalWithProfile } from '@/lib/hooks'
 import toast from 'react-hot-toast'
 
 interface Props {
@@ -20,6 +20,7 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
   const p = proposal.profiles
   const { mutate: shortlist, isPending: shortlisting } = useShortlistProposal()
   const { mutate: hire, isPending: hiring } = useHireFreelancer()
+  const { mutate: decline, isPending: declining } = useDeclineProposal()
 
   const handleShortlist = () => {
     shortlist({ proposalId: proposal.id, jobId }, {
@@ -39,7 +40,7 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
   }
 
   return (
-    <div className={cn('card p-5 transition-all', proposal.is_shortlisted && 'border-[#14a800]/40 bg-[#f9fef9]')}>
+    <div className={cn('card p-5 transition-all', proposal.is_shortlisted && 'border-[#14a800]/40 bg-[#14a800/10]')}>
       {/* Shortlist ribbon */}
       {proposal.is_shortlisted && (
         <div className="flex items-center gap-1 text-[#14a800] text-xs font-medium mb-3">
@@ -53,7 +54,7 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
           {p?.avatar_url ? (
             <img src={p.avatar_url} alt={p.full_name ?? ''} className="w-12 h-12 rounded-full object-cover" />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-base font-bold text-gray-600">
+            <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center text-base font-bold text-muted-foreground">
               {getInitials(p?.full_name ?? '?')}
             </div>
           )}
@@ -65,7 +66,7 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-[#1d1d1d]">{p?.full_name ?? 'Freelancer'}</span>
+                <span className="font-semibold text-foreground">{p?.full_name ?? 'Freelancer'}</span>
                 {p?.phone_verified && (
                   <span title="Phone verified" className="badge badge-green gap-0.5">
                     <Shield className="w-3 h-3" /> Verified
@@ -77,27 +78,27 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
                   </span>
                 )}
               </div>
-              {p?.title && <p className="text-sm text-[#6b6b6b] mt-0.5">{p.title}</p>}
+              {p?.title && <p className="text-sm text-muted-foreground mt-0.5">{p.title}</p>}
             </div>
 
             {/* Rate */}
             <div className="text-right flex-shrink-0">
-              <div className="font-bold text-[#1d1d1d] text-lg">
+              <div className="font-bold text-foreground text-lg">
                 {formatCurrency(proposal.bid_amount ?? 0)}
-                {jobBudgetType === 'hourly' && <span className="text-sm font-normal text-[#6b6b6b]">/hr</span>}
+                {jobBudgetType === 'hourly' && <span className="text-sm font-normal text-muted-foreground">/hr</span>}
               </div>
               {proposal.delivery_days && (
-                <div className="text-xs text-[#6b6b6b]">in {proposal.delivery_days} day{proposal.delivery_days !== 1 ? 's' : ''}</div>
+                <div className="text-xs text-muted-foreground">in {proposal.delivery_days} day{proposal.delivery_days !== 1 ? 's' : ''}</div>
               )}
             </div>
           </div>
 
           {/* Stats row */}
-          <div className="flex items-center gap-3 mt-2 text-sm text-[#6b6b6b] flex-wrap">
+          <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground flex-wrap">
             {(p?.rating ?? 0) > 0 && (
               <span className="flex items-center gap-1 text-amber-500 font-medium">
                 <Star className="w-3.5 h-3.5 fill-current" /> {p!.rating.toFixed(1)}
-                <span className="text-[#6b6b6b] font-normal">({p!.review_count})</span>
+                <span className="text-muted-foreground font-normal">({p!.review_count})</span>
               </span>
             )}
             {(p?.jobs_completed ?? 0) > 0 && <span>{p!.jobs_completed} jobs done</span>}
@@ -118,7 +119,7 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
 
           {/* Cover letter */}
           <div className="mt-3">
-            <p className={cn('text-sm text-[#444] leading-relaxed', !expanded && 'line-clamp-3')}>
+            <p className={cn('text-sm text-muted-foreground leading-relaxed', !expanded && 'line-clamp-3')}>
               {proposal.cover_letter}
             </p>
             {proposal.cover_letter.length > 200 && (
@@ -144,6 +145,19 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
                   View Profile
                 </Link>
                 <button
+                  onClick={() => decline(
+                    { proposalId: proposal.id, jobId },
+                    {
+                      onSuccess: () => toast.success('Proposal declined'),
+                      onError: (e) => toast.error(e.message),
+                    }
+                  )}
+                  disabled={declining}
+                  className="btn btn-sm text-red-400 border border-red-900/40 hover:bg-red-950/30 hover:border-red-700/50"
+                >
+                  {declining ? 'Declining…' : 'Decline'}
+                </button>
+                <button
                   onClick={() => setShowHireConfirm(true)}
                   className="btn btn-primary btn-sm ml-auto"
                 >
@@ -151,8 +165,8 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-2 w-full bg-[#f0fdf4] border border-[#14a800]/30 rounded-xl p-3">
-                <p className="text-sm text-[#1d1d1d] flex-1">
+              <div className="flex items-center gap-2 w-full bg-[#14a800/10] border border-[#14a800]/30 rounded-xl p-3">
+                <p className="text-sm text-foreground flex-1">
                   Hire <strong>{p?.full_name}</strong> for <strong>{formatCurrency(proposal.bid_amount ?? 0)}</strong>?
                 </p>
                 <button onClick={() => setShowHireConfirm(false)} className="btn btn-secondary btn-sm">Cancel</button>

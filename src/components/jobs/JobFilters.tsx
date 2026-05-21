@@ -34,8 +34,8 @@ export default function JobFilters({ onClose }: Props) {
       onClick={() => setFilter(filterKey, value)}
       className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
         active(filterKey, value)
-          ? 'bg-[#14a800] text-white border-[#14a800]'
-          : 'bg-white text-[#1d1d1d] border-[#e0e0e0] hover:border-[#14a800] hover:text-[#14a800]'
+          ? 'bg-[#14a800] text-foreground border-[#14a800]'
+          : 'bg-card text-foreground border-border hover:border-[#14a800] hover:text-[#14a800]'
       }`}
     >
       {label}
@@ -45,20 +45,20 @@ export default function JobFilters({ onClose }: Props) {
   return (
     <aside className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-[#1d1d1d]">Filters</h3>
+        <h3 className="font-semibold text-foreground">Filters</h3>
         <div className="flex items-center gap-2">
           {hasFilters && (
             <button onClick={clearAll} className="text-xs text-[#14a800] hover:underline flex items-center gap-1">
               <X className="w-3 h-3" /> Clear all
             </button>
           )}
-          {onClose && <button onClick={onClose} className="text-[#6b6b6b] hover:text-[#1d1d1d] lg:hidden"><X className="w-4 h-4" /></button>}
+          {onClose && <button onClick={onClose} className="text-muted-foreground hover:text-foreground lg:hidden"><X className="w-4 h-4" /></button>}
         </div>
       </div>
 
       {/* Budget type */}
       <div className="mb-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#6b6b6b] mb-2">Budget Type</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Budget Type</p>
         <div className="flex flex-col gap-1.5">
           <Chip label="Fixed Price" filterKey="budget_type" value="fixed" />
           <Chip label="Hourly Rate" filterKey="budget_type" value="hourly" />
@@ -69,7 +69,7 @@ export default function JobFilters({ onClose }: Props) {
 
       {/* Experience level */}
       <div className="mb-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#6b6b6b] mb-2">Experience Level</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Experience Level</p>
         <div className="flex flex-col gap-1.5">
           {LEVELS.map(l => <Chip key={l} label={LEVEL_LABELS[l]} filterKey="experience_level" value={l} />)}
         </div>
@@ -79,7 +79,7 @@ export default function JobFilters({ onClose }: Props) {
 
       {/* Duration */}
       <div className="mb-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#6b6b6b] mb-2">Project Length</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Project Length</p>
         <div className="flex flex-col gap-1.5">
           {DURATIONS.map(d => <Chip key={d} label={d} filterKey="duration" value={d} />)}
         </div>
@@ -89,7 +89,7 @@ export default function JobFilters({ onClose }: Props) {
 
       {/* Category */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#6b6b6b] mb-2">Category</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Category</p>
         <div className="flex flex-col gap-1.5">
           {CATEGORIES.map(c => <Chip key={c} label={c} filterKey="category" value={c} />)}
         </div>

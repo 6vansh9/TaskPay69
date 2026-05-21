@@ -1,28 +1,42 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { Inter, Bricolage_Grotesque } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import { Suspense } from 'react'
 import QueryProvider from '@/components/providers/QueryProvider'
 import FloatingChatWrapper from '@/components/chat/FloatingChatWrapper'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-bricolage',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: { default: 'TaskPay — Hire Top Freelancers', template: '%s | TaskPay' },
   description: 'Connect with skilled freelancers and get your projects done. Post a job, receive proposals, and pay securely.',
+  icons: { icon: '/favicon.png' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-[var(--font-geist-sans)]">
-        <QueryProvider>
-          {children}
-          <Suspense fallback={null}>
-            <FloatingChatWrapper />
-          </Suspense>
-        </QueryProvider>
+    <html lang="en" className={`${inter.variable} ${bricolage.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col font-sans">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <QueryProvider>
+            {children}
+            <Suspense fallback={null}>
+              <FloatingChatWrapper />
+            </Suspense>
+          </QueryProvider>
+        </ThemeProvider>
         <Toaster
           position="top-right"
           toastOptions={{

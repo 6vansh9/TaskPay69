@@ -41,7 +41,7 @@ export default function DisputeModal({ contractId, onDisputeRaised, onClose }: P
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-red-600">
             <AlertCircle className="w-5 h-5" />
-            <h2 className="font-bold text-[#1d1d1d]">Raise a Dispute</h2>
+            <h2 className="font-bold text-foreground">Raise a Dispute</h2>
           </div>
           <button onClick={onClose} className="btn btn-ghost p-1.5 rounded-lg">
             <X className="w-4 h-4" />
@@ -63,7 +63,7 @@ export default function DisputeModal({ contractId, onDisputeRaised, onClose }: P
             value={reason}
             onChange={e => setReason(e.target.value)}
           />
-          <div className="text-xs text-[#6b6b6b] mt-1 text-right">{reason.length} / 1000</div>
+          <div className="text-xs text-muted-foreground mt-1 text-right">{reason.length} / 1000</div>
         </div>
 
         <div className="flex gap-2">

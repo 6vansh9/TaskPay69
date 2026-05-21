@@ -19,7 +19,7 @@ function StarRow({ value }: { value: number }) {
   return (
     <span className="flex gap-0.5">
       {[1,2,3,4,5].map(s => (
-        <Star key={s} className={`w-3.5 h-3.5 ${value >= s ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+        <Star key={s} className={`w-3.5 h-3.5 ${value >= s ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
       ))}
     </span>
   )
@@ -43,7 +43,7 @@ export default function ReviewList({ revieweeId }: { revieweeId: string }) {
   )
 
   if (reviews.length === 0) return (
-    <p className="text-gray-400 text-sm py-8 text-center">No reviews yet.</p>
+    <p className="text-[var(--faint)] text-sm py-8 text-center">No reviews yet.</p>
   )
 
   return (
@@ -51,26 +51,26 @@ export default function ReviewList({ revieweeId }: { revieweeId: string }) {
       {reviews.map(r => (
         <div key={r.id} className="card p-5">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#14a800/20] flex items-center justify-center text-[#14a800] font-bold text-sm flex-shrink-0">
               {r.reviewer?.full_name?.[0] ?? '?'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-gray-900">{r.reviewer?.full_name ?? 'Anonymous'}</span>
+                <span className="font-semibold text-sm text-foreground">{r.reviewer?.full_name ?? 'Anonymous'}</span>
                 <StarRow value={r.rating} />
-                <span className="text-xs text-gray-400 capitalize">{r.reviewer?.role}</span>
+                <span className="text-xs text-[var(--faint)] capitalize">{r.reviewer?.role}</span>
               </div>
-              <p className="text-sm text-gray-600 mt-2 leading-relaxed">{r.comment}</p>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{r.comment}</p>
 
               {(r.quality_rating || r.communication_rating || r.deadline_rating) && (
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   {r.quality_rating && <span>Quality: <StarRow value={r.quality_rating} /></span>}
                   {r.communication_rating && <span>Communication: <StarRow value={r.communication_rating} /></span>}
                   {r.deadline_rating && <span>Deadlines: <StarRow value={r.deadline_rating} /></span>}
                 </div>
               )}
 
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-[var(--faint)] mt-2">
                 {new Date(r.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
               </p>
             </div>

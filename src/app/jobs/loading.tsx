@@ -2,8 +2,8 @@ import { CardSkeleton, Skeleton } from '@/components/ui/Skeleton'
 
 export default function JobsLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="h-16 bg-white border-b border-gray-100" />
+    <div className="min-h-screen bg-background">
+      <div className="h-16 bg-card border-b border-[var(--muted)]" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
           <aside className="space-y-4">

@@ -18,5 +18,51 @@ export async function GET(_req: NextRequest) {
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data ?? [])
+
+  const convIds = (data ?? []).map((c: { id: string }) => c.id)
+
+  if (convIds.length === 0) return NextResponse.json([])
+
+  // Fetch last message per conversation and unread counts in parallel
+  const [{ data: msgData }, { data: unreadData }] = await Promise.all([
+    supabase
+      .from('messages')
+      .select('conversation_id, content, created_at, sender_id')
+      .in('conversation_id', convIds)
+      .order('created_at', { ascending: false })
+      .limit(convIds.length * 3),
+    supabase
+      .from('messages')
+      .select('conversation_id')
+      .in('conversation_id', convIds)
+      .eq('read', false)
+      .neq('sender_id', user.id),
+  ])
+
+  // Build lookup maps
+  const lastMsgMap: Record<string, { content: string; created_at: string; sender_id: string }> = {}
+  for (const m of msgData ?? []) {
+    if (m.conversation_id && !lastMsgMap[m.conversation_id]) {
+      lastMsgMap[m.conversation_id] = m
+    }
+  }
+  const unreadMap: Record<string, number> = {}
+  for (const m of unreadData ?? []) {
+    if (m.conversation_id) unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] ?? 0) + 1
+  }
+
+  const enriched = (data ?? []).map((c: { id: string }) => ({
+    ...c,
+    last_message: lastMsgMap[c.id] ?? null,
+    unread_count: unreadMap[c.id] ?? 0,
+  }))
+
+  // Sort by last message recency
+  enriched.sort((a: { last_message: { created_at: string } | null; id: string }, b: { last_message: { created_at: string } | null; id: string }) => {
+    const aTime = a.last_message?.created_at ?? ''
+    const bTime = b.last_message?.created_at ?? ''
+    return bTime.localeCompare(aTime)
+  })
+
+  return NextResponse.json(enriched)
 }

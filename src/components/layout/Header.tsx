@@ -2,12 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import { Menu, X, ChevronDown, Briefcase, User, LogOut, Settings, FileText } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import {
+  Menu, X, Search, LogOut, Settings, FileText,
+  HelpCircle, ChevronDown, Zap, Shield,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types/database'
 import NotificationBell from '@/components/notifications/NotificationBell'
+import MessagesNavBadge from '@/components/chat/MessagesNavBadge'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function Header() {
   const pathname = usePathname()
@@ -15,19 +20,20 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [user, setUser] = useState<Profile | null>(null)
-  const [scrolled, setScrolled] = useState(false)
+  const [togglingAvail, setTogglingAvail] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       if (!authUser) return
-      supabase.from('profiles').select('*').eq('id', authUser.id).single()
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
         .then(({ data }) => setUser(data))
     })
-
-    const handleScroll = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const handleSignOut = async () => {
@@ -37,131 +43,315 @@ export default function Header() {
     router.refresh()
   }
 
-  const isLanding = pathname === '/'
+  async function toggleAvailability() {
+    if (!user) return
+    setTogglingAvail(true)
+    const supabase = createClient()
+    const next = !user.is_available
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_available: next })
+      .eq('id', user.id)
+    if (!error) setUser(u => u ? { ...u, is_available: next } : u)
+    setTogglingAvail(false)
+  }
+
+  const isFreelancer = user?.role === 'freelancer'
+  const isAdmin = (user?.role as string | undefined) === 'admin'
+
+  const freelancerNav = [
+    { href: '/jobs',      label: 'Find Work' },
+    { href: '/contracts', label: 'Deliver Work' },
+    { href: '/payouts',   label: 'Manage Finances' },
+  ]
+
+  const clientNav = [
+    { href: '/freelancers', label: 'Find Talent' },
+    { href: '/my-jobs',     label: 'My Jobs' },
+    { href: '/payouts',     label: 'Manage Finances' },
+  ]
+
+  const adminNav = [
+    { href: '/admin', label: 'Admin Panel' },
+  ]
+
+  const navLinks = user ? (isAdmin ? adminNav : isFreelancer ? freelancerNav : clientNav) : [
+    { href: '/jobs',        label: 'Find Work' },
+    { href: '/freelancers', label: 'Find Talent' },
+  ]
 
   return (
-    <header
-      className={cn(
-        'sticky top-0 z-50 transition-all duration-200',
-        scrolled || !isLanding
-          ? 'bg-white border-b border-gray-200 shadow-sm'
-          : 'bg-transparent'
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <Briefcase className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-gray-900">TaskPay</span>
-          </Link>
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 md:px-8">
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link href="/jobs" className={cn('btn btn-ghost text-sm', pathname.startsWith('/jobs') && 'text-indigo-600 bg-indigo-50')}>
-              Find Work
+        {/* Logo — left half uses --foreground so it adapts to light/dark */}
+        <Link href="/" className="flex-shrink-0 flex items-center">
+          <svg viewBox="0 0 680 160" width="180" height="42" xmlns="http://www.w3.org/2000/svg" aria-label="TaskPay">
+            <defs>
+              <clipPath id="nav-tp-left">
+                <rect x="0" y="0" width="340" height="160"/>
+              </clipPath>
+              <clipPath id="nav-tp-right">
+                <rect x="340" y="0" width="340" height="160"/>
+              </clipPath>
+            </defs>
+            <text x="340" y="108" fontFamily="Georgia, serif" fontSize="88" fontWeight="400" letterSpacing="-3" style={{fill:'var(--foreground)'}} textAnchor="middle" clipPath="url(#nav-tp-left)">TaskPay</text>
+            <text x="340" y="108" fontFamily="Georgia, serif" fontSize="88" fontWeight="400" letterSpacing="-3" fill="#14A800" textAnchor="middle" clipPath="url(#nav-tp-right)">TaskPay</text>
+            <line x1="340" y1="22" x2="340" y2="118" stroke="#14A800" strokeWidth="1" opacity="0.35"/>
+          </svg>
+        </Link>
+
+        {/* Desktop Nav */}
+        <nav className="hidden flex-1 items-center gap-0.5 lg:flex">
+          {navLinks.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors text-foreground/60 hover:bg-foreground/5 hover:text-foreground',
+                pathname.startsWith(href) && 'bg-foreground/8 text-foreground'
+              )}
+            >
+              {label}
             </Link>
-            <Link href="/freelancers" className={cn('btn btn-ghost text-sm', pathname.startsWith('/freelancers') && 'text-indigo-600 bg-indigo-50')}>
-              Find Talent
+          ))}
+          {!user && (
+            <Link
+              href="/auth/register?role=client"
+              className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
+            >
+              Post a Job
             </Link>
-            {!user && (
-              <Link href="/auth/register?role=client" className="btn btn-ghost text-sm">
-                Post a Job
+          )}
+        </nav>
+
+        {/* Right side */}
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* Search pill */}
+          <div className="hidden items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 lg:flex">
+            <Search className="size-4 flex-shrink-0 text-foreground/40" />
+            <input
+              type="text"
+              placeholder="Search jobs or talent"
+              className="w-40 bg-transparent text-sm outline-none font-sans text-foreground placeholder:text-foreground/35"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const val = (e.target as HTMLInputElement).value.trim()
+                  if (val) router.push(`/jobs?q=${encodeURIComponent(val)}`)
+                }
+              }}
+            />
+          </div>
+
+          {user ? (
+            <>
+              <MessagesNavBadge userId={user.id} dark={true} />
+              <NotificationBell userId={user.id} />
+              <ThemeToggle />
+
+              {/* Help */}
+              <Link
+                href="/help"
+                className="hidden sm:flex size-9 items-center justify-center rounded-md text-foreground/50 hover:bg-foreground/5 hover:text-foreground transition-colors"
+                title="Help"
+              >
+                <HelpCircle className="size-4.5" />
               </Link>
-            )}
-          </nav>
 
-          {/* Right side */}
-          <div className="flex items-center gap-2">
-            {user ? (
-              <>
-                <NotificationBell userId={user.id} />
+              {/* Settings */}
+              <Link
+                href="/settings"
+                className={cn(
+                  'hidden sm:flex size-9 items-center justify-center rounded-md text-foreground/50 hover:bg-foreground/5 hover:text-foreground transition-colors',
+                  pathname === '/settings' && 'text-foreground bg-foreground/8'
+                )}
+                title="Settings"
+              >
+                <Settings className="size-4.5" />
+              </Link>
 
-                {/* User Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(v => !v)}
-                    className="flex items-center gap-2 btn btn-ghost"
-                  >
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.full_name ?? ''} className="w-7 h-7 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-700">
-                        {(user.full_name ?? 'U')[0].toUpperCase()}
-                      </div>
-                    )}
-                    <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
-                      {user.full_name ?? 'Account'}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  </button>
+              {/* Avatar dropdown */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(v => !v)}
+                  className="flex items-center gap-2 rounded-full px-2 py-1.5 text-sm font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+                >
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.full_name ?? ''} className="size-8 rounded-full object-cover ring-2 ring-transparent hover:ring-[#14a800]/40 transition-all" />
+                  ) : (
+                    <div className="size-8 rounded-full bg-[#14a800]/20 flex items-center justify-center text-xs font-semibold text-[#14a800]">
+                      {(user.full_name ?? 'U')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <ChevronDown className="size-3.5 opacity-50 hidden sm:block" />
+                </button>
 
-                  {userMenuOpen && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-52 card z-20 py-1 overflow-hidden">
-                        <div className="px-4 py-2.5 border-b border-gray-100">
-                          <p className="text-sm font-medium text-gray-900 truncate">{user.full_name}</p>
-                          <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                {userMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-60 rounded-xl border border-border bg-card shadow-2xl z-20 overflow-hidden">
+
+                      {/* Header */}
+                      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
+                        {user.avatar_url ? (
+                          <img src={user.avatar_url} alt="" className="size-9 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="size-9 rounded-full bg-[#14a800]/20 flex items-center justify-center text-sm font-bold text-[#14a800] flex-shrink-0">
+                            {(user.full_name ?? 'U')[0].toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{user.full_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
                         </div>
-                        <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <User className="w-4 h-4" /> Dashboard
-                        </Link>
-                        <Link href="/contracts" onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <FileText className="w-4 h-4" /> My Contracts
-                        </Link>
-                        <Link href="/profile" onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <Settings className="w-4 h-4" /> Profile & Settings
-                        </Link>
-                        <button onClick={handleSignOut}
-                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100">
-                          <LogOut className="w-4 h-4" /> Sign out
+                      </div>
+
+                      {/* Online toggle */}
+                      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
+                        <span className="text-sm text-foreground/70">Online for messages</span>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={user.is_available ?? false}
+                          onClick={toggleAvailability}
+                          disabled={togglingAvail}
+                          className={cn(
+                            'relative w-9 h-[20px] rounded-full transition-colors flex-shrink-0 disabled:opacity-50',
+                            user.is_available ? 'bg-[#14a800]' : 'bg-muted'
+                          )}
+                        >
+                          <span className={cn(
+                            'absolute top-0.5 w-4 h-4 bg-card rounded-full shadow-sm transition-transform',
+                            user.is_available ? 'left-[calc(100%-18px)]' : 'left-0.5'
+                          )} />
                         </button>
                       </div>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <Link href="/auth/login" className="btn btn-ghost text-sm">Log in</Link>
-                <Link href="/auth/register" className="btn btn-primary text-sm">Sign up free</Link>
-              </div>
-            )}
 
-            {/* Mobile hamburger */}
-            <button
-              className="md:hidden btn btn-ghost p-2"
-              onClick={() => setMobileOpen(v => !v)}
-              aria-label="Menu"
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
+                      {/* Nav links */}
+                      <div className="py-1">
+                        {isAdmin && (
+                          <Link href="/admin" onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 transition-colors">
+                            <Shield className="size-4" /> Admin Panel
+                          </Link>
+                        )}
+                        <Link href={`/profile/${user.id}`} onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors">
+                          <div className="size-4 rounded-full bg-[#14a800]/20 flex items-center justify-center text-[9px] font-bold text-[#14a800]">
+                            {(user.full_name ?? 'U')[0].toUpperCase()}
+                          </div>
+                          Your profile
+                        </Link>
+                        <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors">
+                          <FileText className="size-4" /> Dashboard
+                        </Link>
+                        <Link href="/contracts" onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors">
+                          <FileText className="size-4" /> My Contracts
+                        </Link>
+                        <Link href="/settings" onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors">
+                          <Settings className="size-4" /> Settings
+                        </Link>
+                      </div>
+
+                      {/* Connects balance (freelancer only) */}
+                      {isFreelancer && (
+                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border bg-background">
+                          <div className="flex items-center gap-2 text-sm text-foreground/70">
+                            <Zap className="size-4 text-[#14a800]" /> Connects
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {user.connects_balance ?? 0}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Sign out */}
+                      <button onClick={handleSignOut}
+                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 border-t border-border hover:bg-red-500/10 transition-colors">
+                        <LogOut className="size-4" /> Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+              <ThemeToggle />
+              <Link
+                href="/auth/login"
+                className="rounded-full px-4 py-2 text-sm font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/auth/register"
+                className="rounded-full bg-[#14a800] px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#12a000]"
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
+
+          {/* Mobile hamburger */}
+          <button
+            className="inline-flex size-9 items-center justify-center rounded-md transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground md:hidden"
+            onClick={() => setMobileOpen(v => !v)}
+            aria-label="Menu"
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white px-4 py-3 flex flex-col gap-1">
-          <Link href="/jobs" onClick={() => setMobileOpen(false)} className="btn btn-ghost justify-start">Find Work</Link>
-          <Link href="/freelancers" onClick={() => setMobileOpen(false)} className="btn btn-ghost justify-start">Find Talent</Link>
-          {user ? (
-            <>
-              <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="btn btn-ghost justify-start">Dashboard</Link>
-              <button onClick={handleSignOut} className="btn btn-ghost justify-start text-red-600">Sign out</button>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="btn btn-secondary justify-start">Log in</Link>
-              <Link href="/auth/register" onClick={() => setMobileOpen(false)} className="btn btn-primary justify-start">Sign up free</Link>
-            </>
-          )}
+        <div className="border-t border-border bg-background lg:hidden">
+          <nav className="mx-auto flex max-w-[1400px] flex-col gap-1 px-4 py-3">
+            {navLinks.map(({ href, label }) => (
+              <Link key={href} href={href} onClick={() => setMobileOpen(false)}
+                className="flex items-center rounded-md px-3 py-3 text-sm font-medium text-foreground/70 hover:bg-foreground/5 hover:text-foreground">
+                {label}
+              </Link>
+            ))}
+            {user ? (
+              <>
+                {isAdmin ? (
+                  <Link href="/admin" onClick={() => setMobileOpen(false)}
+                    className="flex items-center rounded-md px-3 py-3 text-sm font-medium text-purple-400 hover:bg-purple-500/10">
+                    Admin Panel
+                  </Link>
+                ) : (
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}
+                    className="flex items-center rounded-md px-3 py-3 text-sm font-medium text-foreground/70 hover:bg-foreground/5 hover:text-foreground">
+                    Dashboard
+                  </Link>
+                )}
+                <Link href="/settings" onClick={() => setMobileOpen(false)}
+                  className="flex items-center rounded-md px-3 py-3 text-sm font-medium text-foreground/70 hover:bg-foreground/5 hover:text-foreground">
+                  Settings
+                </Link>
+                <button onClick={handleSignOut}
+                  className="flex items-center rounded-md px-3 py-3 text-sm font-medium text-red-400 text-left">
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
+                <Link href="/auth/login" onClick={() => setMobileOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground/70 hover:bg-foreground/5">
+                  Log in
+                </Link>
+                <Link href="/auth/register" onClick={() => setMobileOpen(false)}
+                  className="rounded-full bg-[#14a800] px-4 py-2.5 text-sm font-medium text-foreground text-center hover:bg-[#12a000]">
+                  Sign up
+                </Link>
+              </div>
+            )}
+          </nav>
         </div>
       )}
     </header>

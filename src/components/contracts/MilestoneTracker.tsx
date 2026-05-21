@@ -29,11 +29,11 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, { label: string; icon: typeof CheckCircle2; bg: string; text: string }> = {
-  pending: { label: 'Pending', icon: Clock, bg: 'bg-gray-100', text: 'text-[#6b6b6b]' },
-  delivered: { label: 'Delivered', icon: CheckCircle2, bg: 'bg-blue-50', text: 'text-blue-600' },
+  pending: { label: 'Pending', icon: Clock, bg: 'bg-card', text: 'text-muted-foreground' },
+  delivered: { label: 'Delivered', icon: CheckCircle2, bg: 'bg-blue-950/30', text: 'text-blue-400' },
   revision_requested: { label: 'Revision', icon: RotateCcw, bg: 'bg-orange-50', text: 'text-orange-600' },
-  approved: { label: 'Approved', icon: CheckCircle2, bg: 'bg-[#e2f0d9]', text: 'text-[#14a800]' },
-  disputed: { label: 'Disputed', icon: AlertCircle, bg: 'bg-red-50', text: 'text-red-600' },
+  approved: { label: 'Approved', icon: CheckCircle2, bg: 'bg-[#14a800/20]', text: 'text-[#14a800]' },
+  disputed: { label: 'Disputed', icon: AlertCircle, bg: 'bg-red-950/30', text: 'text-red-600' },
 }
 
 export default function MilestoneTracker({ contractId, milestones, isClient, contractStatus, onChange }: Props) {
@@ -94,7 +94,7 @@ export default function MilestoneTracker({ contractId, milestones, isClient, con
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-[#1d1d1d]">Milestones</h2>
+        <h2 className="font-semibold text-foreground">Milestones</h2>
         {canAddMilestone && !showForm && (
           <button onClick={() => setShowForm(true)} className="btn btn-secondary btn-sm gap-1">
             <Plus className="w-3.5 h-3.5" /> Add Milestone
@@ -105,7 +105,7 @@ export default function MilestoneTracker({ contractId, milestones, isClient, con
       {/* Progress bar */}
       {milestones.length > 0 && (
         <div className="mb-4">
-          <div className="flex justify-between text-xs text-[#6b6b6b] mb-1">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
             <span>{progressPct}% complete</span>
             <span>{formatCurrency(approvedAmount)} of {formatCurrency(totalAmount)} approved</span>
           </div>
@@ -118,7 +118,7 @@ export default function MilestoneTracker({ contractId, milestones, isClient, con
       {/* Milestone list */}
       <div className="space-y-3">
         {milestones.length === 0 && !showForm && (
-          <p className="text-sm text-[#6b6b6b] text-center py-4">
+          <p className="text-sm text-muted-foreground text-center py-4">
             {isClient ? 'Add milestones to break the project into deliverable chunks.' : 'No milestones yet.'}
           </p>
         )}
@@ -129,7 +129,7 @@ export default function MilestoneTracker({ contractId, milestones, isClient, con
           const isUpdating = updating === m.id
 
           return (
-            <div key={m.id} className={cn('rounded-xl border border-[#e0e0e0] p-4', m.status === 'approved' && 'border-[#14a800]/30 bg-[#f0faea]')}>
+            <div key={m.id} className={cn('rounded-xl border border-border p-4', m.status === 'approved' && 'border-[#14a800]/30 bg-[#14a800/10]')}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -137,13 +137,13 @@ export default function MilestoneTracker({ contractId, milestones, isClient, con
                       <StatusIcon className="w-3 h-3" />
                       {cfg.label}
                     </span>
-                    <span className="font-medium text-sm text-[#1d1d1d] truncate">{m.name}</span>
+                    <span className="font-medium text-sm text-foreground truncate">{m.name}</span>
                   </div>
                   {m.description && (
-                    <p className="text-xs text-[#6b6b6b] mt-1 leading-relaxed">{m.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{m.description}</p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-[#6b6b6b]">
-                    <span className="flex items-center gap-1 font-semibold text-[#1d1d1d]">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1 font-semibold text-foreground">
                       <DollarSign className="w-3 h-3" />
                       {formatCurrency(m.amount)}
                     </span>
@@ -211,8 +211,8 @@ export default function MilestoneTracker({ contractId, milestones, isClient, con
 
       {/* Add milestone form */}
       {showForm && (
-        <div className="mt-4 rounded-xl border border-[#14a800]/30 bg-[#f0faea] p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-[#1d1d1d]">New Milestone</h3>
+        <div className="mt-4 rounded-xl border border-[#14a800]/30 bg-[#14a800/10] p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">New Milestone</h3>
           <div className="field">
             <label className="label">Name *</label>
             <input

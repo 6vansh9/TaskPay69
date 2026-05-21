@@ -49,11 +49,11 @@ export default function PhoneVerifyModal({ onClose, onVerified }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+      <div className="bg-card rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--muted)]">
           <div className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-[#14a800]" />
-            <h2 className="font-semibold text-gray-900">Verify Phone</h2>
+            <h2 className="font-semibold text-foreground">Verify Phone</h2>
           </div>
           <button onClick={onClose} className="btn btn-ghost btn-sm p-1.5"><X className="w-4 h-4" /></button>
         </div>
@@ -61,7 +61,7 @@ export default function PhoneVerifyModal({ onClose, onVerified }: Props) {
         <div className="p-5 space-y-4">
           {step === 'enter_phone' ? (
             <>
-              <p className="text-sm text-gray-500">Enter your mobile number. We'll send a one-time code via SMS.</p>
+              <p className="text-sm text-muted-foreground">Enter your mobile number. We'll send a one-time code via SMS.</p>
               <input
                 type="tel"
                 placeholder="+919876543210"
@@ -76,7 +76,7 @@ export default function PhoneVerifyModal({ onClose, onVerified }: Props) {
             </>
           ) : (
             <>
-              <p className="text-sm text-gray-500">Enter the 6-digit code sent to <strong>{phone}</strong>.</p>
+              <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to <strong>{phone}</strong>.</p>
               <input
                 type="text"
                 inputMode="numeric"
@@ -90,7 +90,7 @@ export default function PhoneVerifyModal({ onClose, onVerified }: Props) {
               <button onClick={confirmOtp} disabled={loading} className="btn btn-primary w-full">
                 {loading ? 'Verifying…' : <><ShieldCheck className="w-4 h-4" /> Verify</>}
               </button>
-              <button onClick={() => setStep('enter_phone')} className="btn btn-ghost btn-sm w-full text-gray-400">
+              <button onClick={() => setStep('enter_phone')} className="btn btn-ghost btn-sm w-full text-[var(--faint)]">
                 Change number
               </button>
             </>

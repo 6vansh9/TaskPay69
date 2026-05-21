@@ -24,55 +24,66 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, total_earnings, bank_account')
-    .eq('id', user.id).single()
-  const p = profile as { role: string; total_earnings: number; bank_account: Record<string, unknown> | null } | null
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
-  if (p?.role !== 'freelancer') return NextResponse.json({ error: 'Only freelancers can request payouts' }, { status: 403 })
-
-  const { amount, bank_account } = await request.json()
-  if (!amount || amount <= 0) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
-  if (!bank_account?.account_number || !bank_account?.ifsc || !bank_account?.account_name) {
-    return NextResponse.json({ error: 'Bank account details required (account_number, ifsc, account_name)' }, { status: 400 })
+  if ((profile as { role: string } | null)?.role !== 'freelancer') {
+    return NextResponse.json({ error: 'Only freelancers can request payouts' }, { status: 403 })
   }
 
-  // Save bank account to profile
-  await supabase.from('profiles').update({ bank_account }).eq('id', user.id)
+  const body = await request.json().catch(() => ({}))
+  const { amount, payment_method, upi_id, account_number, ifsc, account_name, bank_name } = body
 
-  // Check total released but not yet paid out
-  const { data: released } = await supabase
-    .from('transactions')
-    .select('net_amount')
-    .eq('payee_id', user.id)
-    .eq('type', 'escrow_release')
-    .eq('status', 'pending_transfer')
-
-  const availableBalance = (released ?? []).reduce((s, t) => s + ((t as { net_amount: number }).net_amount), 0)
-  if (amount > availableBalance) {
-    return NextResponse.json({
-      error: `Requested ₹${amount} exceeds available balance of ₹${availableBalance.toFixed(2)}`,
-    }, { status: 400 })
+  if (!amount || Number(amount) < 500) {
+    return NextResponse.json({ error: 'Minimum withdrawal amount is ₹500' }, { status: 400 })
   }
 
-  const { data: tx, error } = await supabase.from('transactions').insert({
+  if (!payment_method || !['upi', 'bank'].includes(payment_method)) {
+    return NextResponse.json({ error: 'payment_method must be "upi" or "bank"' }, { status: 400 })
+  }
+
+  if (payment_method === 'upi') {
+    if (!upi_id || typeof upi_id !== 'string' || !upi_id.trim()) {
+      return NextResponse.json({ error: 'UPI ID is required' }, { status: 400 })
+    }
+  } else {
+    if (!account_number || !ifsc || !account_name) {
+      return NextResponse.json({ error: 'account_number, ifsc, and account_name are required' }, { status: 400 })
+    }
+  }
+
+  const payoutDetails =
+    payment_method === 'upi'
+      ? { payment_method: 'upi', upi_id: upi_id.trim() }
+      : { payment_method: 'bank', account_number, ifsc, account_name, bank_name: bank_name ?? '' }
+
+  // Persist latest payment details to profile for admin view
+  await supabase.from('profiles').update({ bank_account: payoutDetails }).eq('id', user.id)
+
+  const { error: txError } = await supabase.from('transactions').insert({
     payee_id: user.id,
-    amount,
+    amount: Number(amount),
     platform_fee: 0,
-    net_amount: amount,
+    net_amount: Number(amount),
     type: 'payout',
     status: 'pending',
-    payment_ref: `payout_req_${Date.now()}`,
-  }).select().single()
+    payment_ref: `payout_${payment_method}_${Date.now()}`,
+    payout_details: payoutDetails,
+  })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (txError) return NextResponse.json({ error: txError.message }, { status: 500 })
 
   await supabase.from('notifications').insert({
     user_id: user.id,
     title: 'Payout requested',
-    message: `₹${amount.toLocaleString()} payout to ${bank_account.account_name} is being processed.`,
+    message:
+      payment_method === 'upi'
+        ? `₹${Number(amount).toLocaleString()} payout to UPI ${upi_id} is being processed.`
+        : `₹${Number(amount).toLocaleString()} payout to ${account_name} is being processed.`,
     type: 'payment',
-    link: `/payouts`,
+    link: '/payouts',
   })
 
-  return NextResponse.json(tx, { status: 201 })
+  return NextResponse.json({ success: true, message: 'Payout request submitted. Payment within 2-3 business days.' })
 }

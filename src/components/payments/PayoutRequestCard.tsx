@@ -48,19 +48,25 @@ export default function PayoutRequestCard({ availableBalance, existingBankAccoun
       return
     }
     setSubmitting(true)
+    const payload =
+      method === 'upi'
+        ? { amount: num, payment_method: 'upi', upi_id: bank.upi_id }
+        : { amount: num, payment_method: 'bank', account_number: bank.account_number, ifsc: bank.ifsc, account_name: bank.account_name, bank_name: bank.bank_name }
+
     const res = await fetch('/api/payouts/request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: num, bank_account: bank }),
+      body: JSON.stringify(payload),
     })
+    const data = await res.json()
     if (res.ok) {
-      toast.success('Payout requested! Transfer within 2–3 business days.')
+      toast.success(data.message ?? 'Payout requested! Transfer within 2–3 business days.')
       setOpen(false)
       setAmount('')
+      setBank({ account_name: '', account_number: '', ifsc: '', bank_name: '', upi_id: '' })
       onRequested()
     } else {
-      const e = await res.json()
-      toast.error(e.error ?? 'Request failed')
+      toast.error(data.error ?? 'Request failed')
     }
     setSubmitting(false)
   }
@@ -68,7 +74,7 @@ export default function PayoutRequestCard({ availableBalance, existingBankAccoun
   if (availableBalance <= 0) return null
 
   return (
-    <div className="card p-5 border-[#14a800]/30 bg-[#f0faea]">
+    <div className="card p-5 border-[#14a800]/30 bg-[#14a800/10]">
       <button
         onClick={() => setOpen(v => !v)}
         className="flex items-center justify-between w-full"
@@ -76,28 +82,28 @@ export default function PayoutRequestCard({ availableBalance, existingBankAccoun
         <div className="flex items-center gap-2">
           <Banknote className="w-5 h-5 text-[#14a800]" />
           <div className="text-left">
-            <p className="font-semibold text-[#1d1d1d] text-sm">Request Bank Transfer</p>
-            <p className="text-xs text-[#6b6b6b]">{formatCurrency(availableBalance)} available · min ₹{MIN_WITHDRAWAL}</p>
+            <p className="font-semibold text-foreground text-sm">Request Bank Transfer</p>
+            <p className="text-xs text-muted-foreground">{formatCurrency(availableBalance)} available · min ₹{MIN_WITHDRAWAL}</p>
           </div>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-[#6b6b6b]" /> : <ChevronDown className="w-4 h-4 text-[#6b6b6b]" />}
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
 
       {open && (
         <div className="mt-4 space-y-3 border-t border-[#14a800]/20 pt-4">
-          <div className="bg-white/70 rounded-xl p-3 text-xs text-[#6b6b6b] leading-relaxed">
+          <div className="bg-card/70 rounded-xl p-3 text-xs text-muted-foreground leading-relaxed">
             Transfers processed manually within <strong>2–3 business days</strong>. Minimum withdrawal: <strong>₹{MIN_WITHDRAWAL}</strong>.
           </div>
 
           {/* Method tabs */}
-          <div className="flex rounded-xl border border-[#e0e0e0] overflow-hidden">
+          <div className="flex rounded-xl border border-border overflow-hidden">
             {(['bank', 'upi'] as const).map(m => (
               <button
                 key={m}
                 onClick={() => setMethod(m)}
                 className={cn(
                   'flex-1 py-2 text-sm font-medium transition-colors',
-                  method === m ? 'bg-[#14a800] text-white' : 'bg-white text-[#6b6b6b] hover:bg-[#f7f7f7]'
+                  method === m ? 'bg-[#14a800] text-foreground' : 'bg-card text-muted-foreground hover:bg-card'
                 )}
               >
                 {m === 'bank' ? 'Bank Transfer' : 'UPI'}

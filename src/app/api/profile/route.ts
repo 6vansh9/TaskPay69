@@ -4,10 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 const ALLOWED_FREELANCER = [
   'full_name','title','bio','location','hourly_rate','skills',
   'is_available','portfolio','languages','work_experience','education',
+  'experience_years','linkedin_url','github_url','skills_with_level',
+  'notification_prefs','work_history','avatar_url',
 ] as const
 
 const ALLOWED_CLIENT = [
   'full_name','bio','location','company_name','industry','website',
+  'company_size','hire_categories','hire_frequency','budget_range',
+  'notification_prefs','avatar_url',
 ] as const
 
 export async function GET() {

@@ -6,10 +6,10 @@ import { Briefcase, Users, Clock, CheckCircle2, XCircle, ArrowRight, PlusCircle 
 import { cn } from '@/lib/utils'
 
 const STATUS_STYLE: Record<string, string> = {
-  open:        'bg-green-100 text-green-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  complete:    'bg-gray-100 text-gray-600',
-  closed:      'bg-gray-100 text-gray-500',
+  open:        'bg-[#14a800/15] text-[#4ade80]',
+  in_progress: 'bg-blue-950/50 text-blue-400',
+  complete:    'bg-card text-muted-foreground',
+  closed:      'bg-card text-muted-foreground',
 }
 const STATUS_ICON: Record<string, typeof Clock> = {
   open:        Clock,
@@ -38,11 +38,11 @@ export default async function MyJobsPage() {
   }[]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">My Jobs</h1>
+          <h1 className="text-2xl font-bold text-foreground">My Jobs</h1>
           <Link href="/jobs/post" className="btn btn-primary btn-sm">
             <PlusCircle className="w-4 h-4" /> Post a Job
           </Link>
@@ -50,9 +50,9 @@ export default async function MyJobsPage() {
 
         {jobList.length === 0 ? (
           <div className="card p-12 text-center">
-            <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900 mb-1">No jobs posted yet</h3>
-            <p className="text-sm text-gray-500 mb-5">Post your first job and start receiving proposals within hours.</p>
+            <Briefcase className="w-10 h-10 text-[var(--faint)] mx-auto mb-3" />
+            <h3 className="font-semibold text-foreground mb-1">No jobs posted yet</h3>
+            <p className="text-sm text-muted-foreground mb-5">Post your first job and start receiving proposals within hours.</p>
             <Link href="/jobs/post" className="btn btn-primary">Post a Job</Link>
           </div>
         ) : (
@@ -64,13 +64,13 @@ export default async function MyJobsPage() {
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h2 className="font-semibold text-gray-900 truncate">{job.title}</h2>
-                        <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1', STATUS_STYLE[job.status] ?? 'bg-gray-100 text-gray-500')}>
+                        <h2 className="font-semibold text-foreground truncate">{job.title}</h2>
+                        <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1', STATUS_STYLE[job.status] ?? 'bg-card text-muted-foreground')}>
                           <Icon className="w-3 h-3" />
                           {job.status.replace('_', ' ')}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                         <span>{job.category}</span>
                         <span>₹{job.budget_min.toLocaleString()} – ₹{job.budget_max.toLocaleString()}</span>
                         <span className="flex items-center gap-1">

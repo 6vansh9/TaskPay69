@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest) {
 
   const { data, error } = await supabase
     .from('transactions')
-    .select(`*, contract:contract_id(id, job:job_id(title))`)
+    .select(`id, type, status, amount, platform_fee, net_amount, payment_ref, payout_details, payer_id, payee_id, contract_id, created_at, contract:contract_id(id, job:job_id(title))`)
     .or(`payer_id.eq.${user.id},payee_id.eq.${user.id}`)
     .order('created_at', { ascending: false })
     .limit(50)

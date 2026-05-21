@@ -20,7 +20,7 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
     setLoading(true)
     const res = await fetch('/api/verify/edu/send-otp', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ edu_email: email }),
+      body: JSON.stringify({ email }),
     })
     const data = await res.json()
     setLoading(false)
@@ -30,7 +30,7 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
       onVerified(); return
     }
     setStep('enter_code')
-    toast.success('Verification code sent to your student email!')
+    toast.success('Verification code sent!')
   }
 
   async function confirmOtp() {
@@ -38,7 +38,7 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
     setLoading(true)
     const res = await fetch('/api/verify/edu/confirm', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ edu_email: email, otp: code }),
+      body: JSON.stringify({ email, otp: code }),
     })
     const data = await res.json()
     setLoading(false)
@@ -49,11 +49,11 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+      <div className="bg-card rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--muted)]">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-blue-600" />
-            <h2 className="font-semibold text-gray-900">Verify Student Email</h2>
+            <GraduationCap className="w-5 h-5 text-blue-400" />
+            <h2 className="font-semibold text-foreground">Verify Student Email</h2>
           </div>
           <button onClick={onClose} className="btn btn-ghost btn-sm p-1.5"><X className="w-4 h-4" /></button>
         </div>
@@ -61,7 +61,7 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
         <div className="p-5 space-y-4">
           {step === 'enter_email' ? (
             <>
-              <p className="text-sm text-gray-500">Enter your institutional email. Accepted domains: <strong>.edu</strong>, <strong>.ac.in</strong>, <strong>.ac.uk</strong>, and more.</p>
+              <p className="text-sm text-muted-foreground">Enter your institutional email. Accepted domains: <strong>.edu</strong>, <strong>.ac.in</strong>, <strong>.ac.uk</strong>, and more.</p>
               <input
                 type="email"
                 placeholder="you@college.edu"
@@ -70,13 +70,16 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
                 className="input w-full"
                 autoFocus
               />
-              <button onClick={sendOtp} disabled={loading} className="btn w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold">
+              <button onClick={sendOtp} disabled={loading} className="btn w-full bg-blue-600 hover:bg-blue-700 text-foreground rounded-full font-semibold">
                 {loading ? 'Sending…' : 'Send Verification Code'}
               </button>
             </>
           ) : (
             <>
-              <p className="text-sm text-gray-500">Enter the 6-digit code sent to <strong>{email}</strong>. Valid for 15 minutes.</p>
+              <p className="text-sm text-muted-foreground">
+                Enter the 6-digit code sent to <strong className="text-foreground">{email}</strong>. Valid for 15 minutes.
+              </p>
+
               <input
                 type="text"
                 inputMode="numeric"
@@ -87,10 +90,10 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
                 className="input w-full text-center text-2xl tracking-widest font-mono"
                 autoFocus
               />
-              <button onClick={confirmOtp} disabled={loading} className="btn w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold">
+              <button onClick={confirmOtp} disabled={loading} className="btn w-full bg-blue-600 hover:bg-blue-700 text-foreground rounded-full font-semibold">
                 {loading ? 'Verifying…' : <><ShieldCheck className="w-4 h-4" /> Verify</>}
               </button>
-              <button onClick={() => setStep('enter_email')} className="btn btn-ghost btn-sm w-full text-gray-400">
+              <button onClick={() => setStep('enter_email')} className="btn btn-ghost btn-sm w-full text-[var(--faint)]">
                 Change email
               </button>
             </>

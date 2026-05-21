@@ -1,60 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { hashValue } from '@/lib/twilio'
-import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { edu_email, otp } = await request.json()
-  if (!edu_email || !otp) return NextResponse.json({ error: 'edu_email and otp required' }, { status: 400 })
+    const body = await request.json().catch(() => ({}))
+    const email = typeof body.email === 'string' ? body.email.toLowerCase().trim() : ''
+    const otp   = typeof body.otp === 'string'   ? body.otp.trim()                  : ''
 
-  // Verify edu_email matches what's stored on profile
-  const { data: profile } = await supabase
-    .from('profiles').select('edu_email, edu_verified').eq('id', user.id).single()
+    if (!email || !otp) {
+      return NextResponse.json({ error: 'email and otp are required.' }, { status: 400 })
+    }
 
-  if (!profile || profile.edu_email !== edu_email) {
-    return NextResponse.json({ error: 'Email mismatch. Send OTP first.' }, { status: 400 })
+    // Verify profile edu_email matches
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('edu_email, edu_verified')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) return NextResponse.json({ error: 'Profile not found.' }, { status: 404 })
+    if ((profile.edu_email ?? '').toLowerCase().trim() !== email) {
+      return NextResponse.json({ error: 'Email mismatch — please request a new OTP.' }, { status: 400 })
+    }
+    if (profile.edu_verified) {
+      return NextResponse.json({ error: 'Already verified.' }, { status: 409 })
+    }
+
+    const now = new Date().toISOString()
+
+    // Find active OTP row
+    const { data: otpRow, error: lookupErr } = await supabase
+      .from('otp_requests')
+      .select('id, otp_code, otp_attempts, otp_expires_at')
+      .eq('user_id', user.id)
+      .eq('otp_type', 'edu')
+      .gt('otp_expires_at', now)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (lookupErr) {
+      console.error('[edu/confirm] lookup error:', lookupErr.message)
+      return NextResponse.json({ error: 'Lookup failed. Please try again.' }, { status: 500 })
+    }
+    if (!otpRow) {
+      return NextResponse.json({ error: 'OTP expired or not found. Request a new code.' }, { status: 400 })
+    }
+
+    const attempts = (otpRow.otp_attempts as number) ?? 0
+    if (attempts >= 5) {
+      return NextResponse.json({ error: 'Too many incorrect attempts. Request a new OTP.' }, { status: 429 })
+    }
+
+    if (otp !== otpRow.otp_code) {
+      await supabase
+        .from('otp_requests')
+        .update({ otp_attempts: attempts + 1 })
+        .eq('id', otpRow.id)
+      const remaining = 5 - (attempts + 1)
+      return NextResponse.json({
+        error: `Incorrect code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
+      }, { status: 400 })
+    }
+
+    // Mark verified — expire the OTP row and update profile
+    await Promise.all([
+      supabase.from('otp_requests')
+        .update({ otp_expires_at: new Date(0).toISOString() })
+        .eq('id', otpRow.id),
+      supabase.from('profiles')
+        .update({ edu_verified: true })
+        .eq('id', user.id),
+    ])
+
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('[edu/confirm] Unexpected error:', err)
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
   }
-  if (profile.edu_verified) return NextResponse.json({ error: 'Already verified' }, { status: 409 })
-
-  const emailHash = hashValue(edu_email)
-  const otpHash = crypto.createHash('sha256').update(String(otp)).digest('hex')
-  const now = new Date().toISOString()
-
-  // Find active OTP request
-  const { data: otpRow } = await supabase
-    .from('otp_requests')
-    .select('id, otp_hash, attempts, expires_at, verified_at')
-    .eq('type', 'edu')
-    .eq('target_hash', emailHash)
-    .is('verified_at', null)
-    .gt('expires_at', now)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (!otpRow) return NextResponse.json({ error: 'OTP expired or not found. Request a new one.' }, { status: 400 })
-
-  if ((otpRow.attempts ?? 0) >= 5) {
-    return NextResponse.json({ error: 'Too many incorrect attempts. Request a new OTP.' }, { status: 429 })
-  }
-
-  if (otpRow.otp_hash !== otpHash) {
-    await supabase.from('otp_requests')
-      .update({ attempts: (otpRow.attempts ?? 0) + 1 })
-      .eq('id', otpRow.id)
-    const remaining = 5 - ((otpRow.attempts ?? 0) + 1)
-    return NextResponse.json({ error: `Incorrect code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.` }, { status: 400 })
-  }
-
-  // Mark OTP as used
-  await supabase.from('otp_requests').update({ verified_at: now }).eq('id', otpRow.id)
-
-  // Mark profile as edu verified
-  await supabase.from('profiles').update({ edu_verified: true }).eq('id', user.id)
-
-  return NextResponse.json({ success: true })
 }

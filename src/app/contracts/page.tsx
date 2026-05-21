@@ -36,7 +36,7 @@ const STATUS_STYLES: Record<string, { label: string; icon: typeof CheckCircle2; 
   delivered: { label: 'Delivered', icon: CheckCircle2, color: 'text-blue-500', badge: 'badge-blue' },
   complete: { label: 'Complete', icon: CheckCircle2, color: 'text-[#14a800]', badge: 'badge-green' },
   disputed: { label: 'Disputed', icon: AlertCircle, color: 'text-red-500', badge: 'badge-red' },
-  cancelled: { label: 'Cancelled', icon: XCircle, color: 'text-[#6b6b6b]', badge: 'badge-gray' },
+  cancelled: { label: 'Cancelled', icon: XCircle, color: 'text-muted-foreground', badge: 'badge-gray' },
 }
 
 export default function ContractsPage() {
@@ -61,11 +61,11 @@ export default function ContractsPage() {
   const filtered = filter === 'all' ? contracts : contracts.filter(c => c.status === filter)
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f7f7f7]">
+    <div className="flex flex-col min-h-screen bg-card">
       <Header />
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[#1d1d1d]">My Contracts</h1>
+          <h1 className="text-2xl font-bold text-foreground">My Contracts</h1>
           <Link href="/jobs" className="btn btn-primary btn-sm">Find Work</Link>
         </div>
 
@@ -79,7 +79,7 @@ export default function ContractsPage() {
             >
               {s === 'all' ? 'All' : STATUS_STYLES[s]?.label ?? s}
               {s !== 'all' && (
-                <span className="ml-1 text-xs text-[#6b6b6b]">
+                <span className="ml-1 text-xs text-muted-foreground">
                   ({contracts.filter(c => c.status === s).length})
                 </span>
               )}
@@ -95,9 +95,9 @@ export default function ContractsPage() {
 
         {!loading && filtered.length === 0 && (
           <div className="card p-12 text-center">
-            <Briefcase className="w-10 h-10 text-[#6b6b6b] mx-auto mb-3" />
-            <p className="font-medium text-[#1d1d1d]">No contracts {filter !== 'all' ? `with status "${STATUS_STYLES[filter]?.label}"` : 'yet'}</p>
-            <p className="text-sm text-[#6b6b6b] mt-1">Hire a freelancer or submit a proposal to get started.</p>
+            <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="font-medium text-foreground">No contracts {filter !== 'all' ? `with status "${STATUS_STYLES[filter]?.label}"` : 'yet'}</p>
+            <p className="text-sm text-muted-foreground mt-1">Hire a freelancer or submit a proposal to get started.</p>
           </div>
         )}
 
@@ -117,7 +117,7 @@ export default function ContractsPage() {
                 {other?.avatar_url ? (
                   <img src={other.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#e2f0d9] flex items-center justify-center text-sm font-bold text-[#14a800] flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[#14a800/20] flex items-center justify-center text-sm font-bold text-[#14a800] flex-shrink-0">
                     {(other?.company_name ?? other?.full_name ?? '?')[0].toUpperCase()}
                   </div>
                 )}
@@ -128,8 +128,8 @@ export default function ContractsPage() {
                     </span>
                     {contract.job?.category && <span className="badge badge-gray">{contract.job.category}</span>}
                   </div>
-                  <div className="font-medium text-[#1d1d1d] mt-1 truncate">{contract.job?.title ?? 'Contract'}</div>
-                  <div className="flex items-center gap-3 mt-0.5 text-xs text-[#6b6b6b]">
+                  <div className="font-medium text-foreground mt-1 truncate">{contract.job?.title ?? 'Contract'}</div>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
                     <span>with {other?.company_name ?? other?.full_name}</span>
                     {other?.rating != null && other.rating > 0 && (
                       <span className="flex items-center gap-0.5 text-amber-500">
@@ -141,7 +141,7 @@ export default function ContractsPage() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="font-bold text-[#14a800]">{formatCurrency(contract.amount ?? 0)}</div>
-                  <div className="text-xs text-[#6b6b6b]">{isClient ? 'You hired' : 'You work'}</div>
+                  <div className="text-xs text-muted-foreground">{isClient ? 'You hired' : 'You work'}</div>
                 </div>
               </Link>
             )

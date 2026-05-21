@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -7,7 +8,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: adminProfile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single()
   if ((adminProfile as { role: string } | null)?.role !== 'admin') {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   }
@@ -29,18 +30,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     case 'verify_edu':   updates.edu_verified = true; break
   }
 
-  const { error } = await supabase.from('profiles').update(updates).eq('id', id)
+  const { error } = await supabaseAdmin.from('profiles').update(updates).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   if (action === 'ban') {
-    await supabase.from('notifications').insert({
+    await supabaseAdmin.from('notifications').insert({
       user_id: id,
       title: 'Account suspended',
       message: 'Your account has been suspended. Contact support for more information.',
       type: 'system',
     })
   } else if (action === 'warn') {
-    await supabase.from('notifications').insert({
+    await supabaseAdmin.from('notifications').insert({
       user_id: id,
       title: 'Account warning',
       message: admin_notes ?? 'You have received a warning on your account.',

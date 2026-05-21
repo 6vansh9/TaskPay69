@@ -34,18 +34,53 @@ function RegisterForm() {
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
+
+    // Pre-check: block if email already registered
+    const checkRes = await fetch('/api/auth/check-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: data.email }),
+    })
+    if (checkRes.status === 409) {
+      toast.error(
+        'This email is already registered. Please sign in instead.',
+        { duration: 5000 }
+      )
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: { full_name: data.full_name, role },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?role=${role}`,
       },
     })
     setLoading(false)
-    if (error) { toast.error(error.message); return }
-    router.push('/auth/verify-email')
+
+    if (error) {
+      // Handle duplicate email returned directly by Supabase
+      if (error.message.toLowerCase().includes('already registered')) {
+        toast.error('This email is already registered. Please sign in instead.')
+        return
+      }
+      toast.error(error.message)
+      return
+    }
+
+    if (signUpData?.session) {
+      // Email confirmation is disabled — user is immediately logged in
+      const dest = role === 'client' ? '/onboarding/client' : '/onboarding/freelancer'
+      router.push(dest)
+      router.refresh()
+    } else {
+      // Email confirmation enabled — user must verify before logging in
+      toast.success('Check your email to verify your account, then sign in.')
+      router.push('/auth/login')
+    }
   }
 
   const handleGoogle = async () => {
@@ -54,8 +89,7 @@ function RegisterForm() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: { role },
+        redirectTo: `${window.location.origin}/auth/callback?role=${role}`,
       },
     })
   }
@@ -63,10 +97,10 @@ function RegisterForm() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex w-2/5 bg-gradient-to-br from-indigo-600 to-violet-700 flex-col justify-between p-12 text-white">
+      <div className="hidden lg:flex w-2/5 bg-gradient-to-br from-[#14a800] to-[#0a6300] flex-col justify-between p-12 text-foreground">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-            <Briefcase className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-card/20 flex items-center justify-center">
+            <Briefcase className="w-4 h-4 text-foreground" />
           </div>
           <span className="text-xl font-bold">TaskPay</span>
         </Link>
@@ -75,7 +109,7 @@ function RegisterForm() {
           <h1 className="text-3xl font-bold leading-tight mb-6">
             {role === 'freelancer' ? 'Start earning on your terms.' : 'Hire top talent, faster.'}
           </h1>
-          <ul className="space-y-3 text-indigo-100">
+          <ul className="space-y-3 text-green-100">
             {(role === 'freelancer' ? [
               'Browse thousands of real projects',
               'Get paid securely via escrow',
@@ -88,35 +122,35 @@ function RegisterForm() {
               'Dispute protection on every project',
             ]).map(item => (
               <li key={item} className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-indigo-300 flex-shrink-0" />
+                <Check className="w-4 h-4 text-green-200 flex-shrink-0" />
                 {item}
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="text-indigo-300 text-sm">
+        <p className="text-green-200 text-sm">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-white font-medium hover:underline">Sign in</Link>
+          <Link href="/auth/login" className="text-foreground font-medium hover:underline">Sign in</Link>
         </p>
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-6 bg-background overflow-y-auto">
         <div className="w-full max-w-md py-8">
           <div className="lg:hidden flex justify-center mb-8">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-[#14a800] flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-foreground" />
               </div>
-              <span className="text-xl font-bold text-gray-900">TaskPay</span>
+              <span className="text-xl font-bold text-foreground">TaskPay</span>
             </Link>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-1">Create your account</h2>
+          <p className="text-sm text-muted-foreground mb-6">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-indigo-600 font-medium hover:underline">Sign in</Link>
+            <Link href="/auth/login" className="text-[#14a800] font-medium hover:underline">Sign in</Link>
           </p>
 
           {/* Role selector */}
@@ -132,13 +166,13 @@ function RegisterForm() {
                 className={cn(
                   'relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center',
                   role === value
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    ? 'border-[#14a800] bg-[#14a800/20] text-[#14a800]'
+                    : 'border-border bg-card text-muted-foreground hover:border-border'
                 )}
               >
                 {role === value && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 text-white" />
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#14a800] flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-foreground" />
                   </span>
                 )}
                 <Icon className="w-6 h-6" />
@@ -149,6 +183,10 @@ function RegisterForm() {
               </button>
             ))}
           </div>
+
+          <p className="text-xs text-muted-foreground -mt-3 mb-4 text-center">
+            Your role is permanent and cannot be changed after signup.
+          </p>
 
           {/* Google */}
           <button onClick={handleGoogle} disabled={googleLoading} className="btn btn-secondary w-full mb-4 gap-3">
@@ -162,8 +200,8 @@ function RegisterForm() {
           </button>
 
           <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center text-xs text-gray-400 bg-gray-50 px-2 mx-auto w-fit">or sign up with email</div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs text-[var(--faint)] bg-background px-2 mx-auto w-fit">or sign up with email</div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -189,7 +227,7 @@ function RegisterForm() {
                   {...register('password')}
                 />
                 <button type="button" onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--faint)] hover:text-muted-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -201,7 +239,7 @@ function RegisterForm() {
             </button>
           </form>
 
-          <p className="text-xs text-gray-400 text-center mt-4">
+          <p className="text-xs text-[var(--faint)] text-center mt-4">
             By signing up, you agree to our{' '}
             <Link href="#" className="underline">Terms</Link> and{' '}
             <Link href="#" className="underline">Privacy Policy</Link>.

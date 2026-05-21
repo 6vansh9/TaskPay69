@@ -26,7 +26,7 @@ export default function VerificationNudge({ phoneVerified, eduVerified, role }: 
 
   return (
     <>
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mb-6">
+      <div className="bg-amber-950/30 border border-amber-900/50 rounded-xl p-4 flex items-start gap-3 mb-6">
         <ShieldCheck className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-amber-800">Boost your credibility — get verified</p>
@@ -37,7 +37,7 @@ export default function VerificationNudge({ phoneVerified, eduVerified, role }: 
             {!verified.phone && (
               <button
                 onClick={() => setShowPhone(true)}
-                className="btn btn-xs bg-amber-500 hover:bg-amber-600 text-white rounded-full px-3 py-1 text-xs font-semibold"
+                className="btn btn-xs bg-amber-500 hover:bg-amber-600 text-foreground rounded-full px-3 py-1 text-xs font-semibold"
               >
                 Verify Phone
               </button>
@@ -45,7 +45,7 @@ export default function VerificationNudge({ phoneVerified, eduVerified, role }: 
             {!verified.edu && role === 'freelancer' && (
               <button
                 onClick={() => setShowEdu(true)}
-                className="btn btn-xs bg-blue-500 hover:bg-blue-600 text-white rounded-full px-3 py-1 text-xs font-semibold"
+                className="btn btn-xs bg-blue-500 hover:bg-blue-600 text-foreground rounded-full px-3 py-1 text-xs font-semibold"
               >
                 Verify Student Email
               </button>

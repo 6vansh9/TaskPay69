@@ -101,6 +101,70 @@ export function useHireFreelancer() {
   })
 }
 
+// ── Freelancers ──────────────────────────────────────────────
+
+export interface FreelancerFilters {
+  q?: string
+  skill?: string
+  min_rate?: number
+  max_rate?: number
+  min_rating?: number
+  verified?: boolean
+  page?: number
+}
+
+export interface FreelancerProfile {
+  id: string
+  full_name: string | null
+  avatar_url: string | null
+  title: string | null
+  bio: string | null
+  hourly_rate: number | null
+  skills: string[] | null
+  location: string | null
+  rating: number
+  review_count: number
+  jobs_completed: number
+  phone_verified: boolean
+  edu_verified: boolean
+  is_available: boolean
+}
+
+export function useFreelancers(filters: FreelancerFilters = {}) {
+  const params = new URLSearchParams()
+  if (filters.q)          params.set('q', filters.q)
+  if (filters.skill)      params.set('skill', filters.skill)
+  if (filters.min_rate)   params.set('min_rate', String(filters.min_rate))
+  if (filters.max_rate)   params.set('max_rate', String(filters.max_rate))
+  if (filters.min_rating) params.set('min_rating', String(filters.min_rating))
+  if (filters.verified)   params.set('verified', 'true')
+  if (filters.page)       params.set('page', String(filters.page))
+  return useQuery({
+    queryKey: ['freelancers', filters],
+    queryFn: async () => {
+      const res = await fetch(`/api/freelancers?${params}`)
+      if (!res.ok) throw new Error('Failed to fetch freelancers')
+      return res.json() as Promise<{ freelancers: FreelancerProfile[]; total: number }>
+    },
+  })
+}
+
+export function useDeclineProposal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ proposalId, jobId }: { proposalId: string; jobId: string }) => {
+      const res = await fetch(`/api/proposals/${proposalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'declined' }),
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Decline failed') }
+      return res.json()
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['proposals', vars.jobId] }),
+  })
+}
+
 // ── Type helpers (minimal, avoids duplicating DB types) ──────────
 
 export interface JobWithProfile {

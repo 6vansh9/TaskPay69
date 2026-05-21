@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { verifyPaymentSignature, PLATFORM_FEE_PCT } from '@/lib/razorpay'
+
+const PLATFORM_FEE_PCT = 0.10
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, contract_id } = await request.json()
-
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !contract_id) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-  }
-
-  // Verify signature
-  const valid = verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)
-  if (!valid) {
-    return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
-  }
+  const { contract_id } = await request.json()
+  if (!contract_id) return NextResponse.json({ error: 'contract_id required' }, { status: 400 })
 
   const { data: raw } = await supabase
     .from('contracts')
@@ -32,17 +24,15 @@ export async function POST(request: NextRequest) {
 
   if (!contract) return NextResponse.json({ error: 'Contract not found' }, { status: 404 })
   if (contract.client_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  if (contract.razorpay_payment_id) return NextResponse.json({ already_paid: true })
+  if (contract.razorpay_payment_id) return NextResponse.json({ already_funded: true })
 
+  const simPaymentId = `sim_${Date.now()}`
   const amount = contract.amount ?? 0
   const platformFee = Math.round(amount * PLATFORM_FEE_PCT * 100) / 100
   const netAmount = amount - platformFee
 
   await Promise.all([
-    supabase.from('contracts').update({
-      razorpay_order_id,
-      razorpay_payment_id,
-    }).eq('id', contract_id),
+    supabase.from('contracts').update({ razorpay_payment_id: simPaymentId }).eq('id', contract_id),
     supabase.from('transactions').insert({
       contract_id,
       payer_id: user.id,
@@ -51,24 +41,17 @@ export async function POST(request: NextRequest) {
       platform_fee: platformFee,
       net_amount: netAmount,
       type: 'escrow_fund',
-      status: 'completed',
-      payment_ref: razorpay_payment_id,
-    }),
-    supabase.from('notifications').insert({
-      user_id: user.id,
-      title: 'Escrow funded ✓',
-      message: `₹${amount.toLocaleString()} is now held in escrow.`,
-      type: 'payment',
-      link: `/contracts/${contract_id}`,
+      status: 'held',
+      payment_ref: simPaymentId,
     }),
     supabase.from('notifications').insert({
       user_id: contract.freelancer_id,
-      title: 'Client has funded escrow',
-      message: `Payment of ₹${amount.toLocaleString()} is secured. Get to work!`,
+      title: '🎉 Escrow funded — start working!',
+      message: `Client has deposited ₹${amount.toLocaleString()} into escrow. You can start working on the project.`,
       type: 'payment',
       link: `/contracts/${contract_id}`,
     }),
   ])
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, payment_id: simPaymentId })
 }

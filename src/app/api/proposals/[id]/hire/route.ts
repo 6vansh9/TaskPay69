@@ -40,13 +40,25 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const freelancerProfile = proposal.profiles as unknown as { id: string; full_name: string | null; email: string | null } | null
   const clientName = (clientProfile as unknown as { full_name: string | null } | null)?.full_name ?? 'A client'
 
+  // Create conversation for this contract (Rule 4: messaging only unlocked after hire)
+  const { error: convErr } = await supabase.from('conversations').insert({
+    client_id: user.id,
+    freelancer_id: proposal.freelancer_id,
+    job_id: job.id,
+    contract_id: contract.id,
+    type: 'contract',
+  })
+  if (convErr) {
+    console.error('[hire] conversation creation failed:', convErr.message)
+  }
+
   // Update proposal + job + notify freelancer (parallel, best-effort)
   await Promise.all([
     supabase.from('proposals').update({ status: 'hired' }).eq('id', id),
     supabase.from('jobs').update({ status: 'in_progress' }).eq('id', job.id),
     supabase.from('notifications').insert({
       user_id: proposal.freelancer_id,
-      title: 'You got hired! 🎉',
+      title: '🎉 You have been hired!',
       message: `${clientName} hired you for "${job.title}"`,
       type: 'hired',
       link: `/contracts/${contract.id}`,

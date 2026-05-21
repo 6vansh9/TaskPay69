@@ -21,7 +21,7 @@ export default function VerificationBadge({ phoneVerified, eduVerified, size = '
     <span className="flex items-center flex-wrap gap-1.5">
       {phoneVerified && (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-semibold bg-green-100 text-green-700 border border-green-200 ${px}`}
+          className={`inline-flex items-center gap-1 rounded-full font-semibold bg-[#14a800/15] text-[#4ade80] border border-[#14a800/30] ${px}`}
           title={TIPS.phone}
         >
           <ShieldCheck className={icon} />
@@ -30,7 +30,7 @@ export default function VerificationBadge({ phoneVerified, eduVerified, size = '
       )}
       {eduVerified && (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-semibold bg-blue-100 text-blue-700 border border-blue-200 ${px}`}
+          className={`inline-flex items-center gap-1 rounded-full font-semibold bg-blue-950/50 text-blue-400 border border-blue-900/50 ${px}`}
           title={TIPS.edu}
         >
           <GraduationCap className={icon} />

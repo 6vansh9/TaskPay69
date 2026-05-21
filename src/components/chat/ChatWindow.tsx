@@ -165,7 +165,7 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
   const Avatar = ({ user, size = 7 }: { user: { full_name?: string | null; avatar_url?: string | null }; size?: number }) => (
     user?.avatar_url
       ? <img src={user.avatar_url} alt="" className={`w-${size} h-${size} rounded-full object-cover flex-shrink-0`} />
-      : <div className={`w-${size} h-${size} rounded-full bg-[#e2f0d9] flex items-center justify-center text-xs font-semibold text-[#14a800] flex-shrink-0`}>
+      : <div className={`w-${size} h-${size} rounded-full bg-[#14a800/20] flex items-center justify-center text-xs font-semibold text-[#14a800] flex-shrink-0`}>
           {(user?.full_name ?? '?')[0].toUpperCase()}
         </div>
   )
@@ -183,7 +183,7 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
         {messages.length === 0 && (
-          <div className="text-center text-sm text-[#6b6b6b] py-8">
+          <div className="text-center text-sm text-muted-foreground py-8">
             No messages yet. Say hello!
           </div>
         )}
@@ -197,8 +197,8 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
                   className={cn(
                     'px-3.5 py-2 rounded-2xl text-sm leading-relaxed',
                     isMe
-                      ? 'bg-[#14a800] text-white rounded-tr-sm'
-                      : 'bg-white border border-[#e0e0e0] text-[#1d1d1d] rounded-tl-sm'
+                      ? 'bg-[#14a800] text-foreground rounded-tr-sm'
+                      : 'bg-card border border-border text-foreground rounded-tl-sm'
                   )}
                 >
                   {msg.content}
@@ -214,7 +214,7 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
                     </a>
                   )}
                 </div>
-                <span className="text-[10px] text-[#6b6b6b] px-1">{timeAgo(msg.created_at)}</span>
+                <span className="text-[10px] text-muted-foreground px-1">{timeAgo(msg.created_at)}</span>
               </div>
             </div>
           )
@@ -223,15 +223,15 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
       </div>
 
       {/* Input */}
-      <div className="border-t border-[#e0e0e0] p-3 bg-white flex-shrink-0">
+      <div className="border-t border-border p-3 bg-card flex-shrink-0">
         {/* Pending attachment preview */}
         {pendingAttachment && (
-          <div className="flex items-center gap-2 mb-2 bg-[#f0faea] border border-[#14a800]/30 rounded-lg px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 mb-2 bg-[#14a800/10] border border-[#14a800]/30 rounded-lg px-3 py-2 text-sm">
             {pendingAttachment.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)
               ? <ImageIcon className="w-4 h-4 text-[#14a800] flex-shrink-0" />
               : <FileText className="w-4 h-4 text-[#14a800] flex-shrink-0" />}
-            <span className="flex-1 truncate text-[#1d1d1d]">{pendingAttachment.name}</span>
-            <button onClick={() => setPendingAttachment(null)} className="text-[#6b6b6b] hover:text-red-500 flex-shrink-0">
+            <span className="flex-1 truncate text-foreground">{pendingAttachment.name}</span>
+            <button onClick={() => setPendingAttachment(null)} className="text-muted-foreground hover:text-red-500 flex-shrink-0">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -242,7 +242,7 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading || sending}
-            className="btn btn-ghost p-2 rounded-xl text-[#6b6b6b] hover:text-[#14a800] flex-shrink-0 disabled:opacity-40"
+            className="btn btn-ghost p-2 rounded-xl text-muted-foreground hover:text-[#14a800] flex-shrink-0 disabled:opacity-40"
             aria-label="Attach file"
             title="Attach file (max 25 MB)"
           >

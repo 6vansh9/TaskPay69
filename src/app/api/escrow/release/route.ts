@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { PLATFORM_FEE_PCT } from '@/lib/razorpay'
+
+const PLATFORM_FEE_PCT = 0.10
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -22,11 +23,9 @@ export async function POST(request: NextRequest) {
 
   if (!contract) return NextResponse.json({ error: 'Contract not found' }, { status: 404 })
   if (contract.client_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  if (!contract.razorpay_payment_id) {
-    return NextResponse.json({ error: 'Escrow not funded yet' }, { status: 400 })
-  }
+  if (!contract.razorpay_payment_id) return NextResponse.json({ error: 'Escrow not funded yet' }, { status: 400 })
 
-  // Check no duplicate release
+  // Prevent duplicate release
   const { data: existing } = await supabase
     .from('transactions')
     .select('id')
@@ -48,7 +47,6 @@ export async function POST(request: NextRequest) {
       platform_fee: platformFee,
       net_amount: freelancerPayout,
       type: 'escrow_release',
-      // pending_transfer = funds approved in DB, manual bank transfer still needed
       status: 'pending_transfer',
       payment_ref: contract.razorpay_payment_id,
     }),
@@ -70,6 +68,20 @@ export async function POST(request: NextRequest) {
       type: 'payment',
       link: `/contracts/${contract_id}`,
     }),
+    supabase.from('notifications').insert({
+      user_id: contract.freelancer_id,
+      title: 'Leave a review',
+      message: 'Share your experience. Reviews are open for 14 days.',
+      type: 'review',
+      link: `/contracts/${contract_id}`,
+    }),
+    supabase.from('notifications').insert({
+      user_id: user.id,
+      title: 'Leave a review',
+      message: 'How did your freelancer do? Reviews are open for 14 days.',
+      type: 'review',
+      link: `/contracts/${contract_id}`,
+    }),
   ])
 
   supabase.rpc('increment_freelancer_earnings' as never, {
@@ -77,9 +89,5 @@ export async function POST(request: NextRequest) {
     amount: freelancerPayout,
   } as never)
 
-  return NextResponse.json({
-    success: true,
-    freelancer_payout: freelancerPayout,
-    platform_fee: platformFee,
-  })
+  return NextResponse.json({ success: true, freelancer_payout: freelancerPayout, platform_fee: platformFee })
 }
