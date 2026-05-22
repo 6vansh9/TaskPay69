@@ -306,7 +306,7 @@ function JobsContent() {
                 <div className="flex flex-col gap-3">
                   {recommendedJobs.map(({ job }) => (
                     <div key={job.id} onClick={() => saveRecentJob(job)}>
-                      <JobCard job={job} freelancerSkills={freelancerSkills} saved={savedJobIds.has(job.id)} />
+                      <JobCard job={job} freelancerSkills={freelancerSkills} saved={savedJobIds.has(job.id)} isFreelancer={userRole === 'freelancer'} />
                     </div>
                   ))}
                 </div>
@@ -370,7 +370,7 @@ function JobsContent() {
                   <div className="flex flex-col gap-3">
                     {data.jobs.map(job => (
                       <div key={job.id} onClick={() => saveRecentJob(job)}>
-                        <JobCard job={job} freelancerSkills={freelancerSkills} saved={savedJobIds.has(job.id)} />
+                        <JobCard job={job} freelancerSkills={freelancerSkills} saved={savedJobIds.has(job.id)} isFreelancer={userRole === 'freelancer'} />
                       </div>
                     ))}
                   </div>

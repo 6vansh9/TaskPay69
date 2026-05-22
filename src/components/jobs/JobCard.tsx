@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Bookmark, Users, Clock, MapPin } from 'lucide-react'
+import { Bookmark, Users, Clock, MapPin, Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { timeAgo, formatCurrency, cn } from '@/lib/utils'
 import type { JobWithProfile } from '@/lib/hooks'
@@ -11,6 +11,14 @@ interface Props {
   job: JobWithProfile
   freelancerSkills?: string[]
   saved?: boolean
+  isFreelancer?: boolean
+}
+
+function connectsCost(budgetMax: number | null): number {
+  if (!budgetMax) return 2
+  if (budgetMax < 5000) return 2
+  if (budgetMax < 25000) return 4
+  return 6
 }
 
 function SkillMatchBadge({ job, freelancerSkills }: { job: JobWithProfile; freelancerSkills: string[] }) {
@@ -22,7 +30,7 @@ function SkillMatchBadge({ job, freelancerSkills }: { job: JobWithProfile; freel
   return <span className={`badge ${color}`}>{pct}% match</span>
 }
 
-export default function JobCard({ job, freelancerSkills = [], saved: savedInit = false }: Props) {
+export default function JobCard({ job, freelancerSkills = [], saved: savedInit = false, isFreelancer = false }: Props) {
   const [bidCount, setBidCount] = useState(job.proposals_count ?? job.bid_count ?? 0)
   const [saved, setSaved] = useState(savedInit)
   const [toggling, setToggling] = useState(false)
@@ -131,9 +139,17 @@ export default function JobCard({ job, freelancerSkills = [], saved: savedInit =
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-2 border-t border-border">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Users className="w-3.5 h-3.5" />
-          <span>{bidCount === 0 ? 'Be the first to apply' : `${bidCount} proposal${bidCount !== 1 ? 's' : ''}`}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users className="w-3.5 h-3.5" />
+            <span>{bidCount === 0 ? 'Be the first to apply' : `${bidCount} proposal${bidCount !== 1 ? 's' : ''}`}</span>
+          </div>
+          {isFreelancer && (
+            <div className="flex items-center gap-1 text-xs text-[#14a800]/70">
+              <Zap className="w-3 h-3" />
+              <span>{connectsCost(job.budget_max ?? null)} connects</span>
+            </div>
+          )}
         </div>
         {job.profiles && (
           <div className="flex items-center gap-1.5">

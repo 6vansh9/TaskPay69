@@ -12,8 +12,8 @@ import toast from 'react-hot-toast'
 
 function connectsCost(budgetMax: number | null): number {
   if (!budgetMax) return 2
-  if (budgetMax < 50000) return 2
-  if (budgetMax < 500000) return 4
+  if (budgetMax < 5000) return 2
+  if (budgetMax < 25000) return 4
   return 6
 }
 

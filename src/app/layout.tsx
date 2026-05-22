@@ -6,6 +6,7 @@ import QueryProvider from '@/components/providers/QueryProvider'
 import FloatingChatWrapper from '@/components/chat/FloatingChatWrapper'
 import TaskBot from '@/components/ai/TaskBot'
 import { ThemeProvider } from '@/components/theme-provider'
+import InstallBanner from '@/components/InstallBanner'
 import './globals.css'
 
 const inter = Inter({
@@ -24,7 +25,13 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://taskpay69.vercel.app'),
   title: { default: 'TaskPay — Hire Top Freelancers', template: '%s | TaskPay' },
   description: 'Connect with skilled freelancers and get your projects done. Post a job, receive proposals, and pay securely with escrow.',
-  icons: { icon: '/favicon.png' },
+  icons: { icon: '/favicon.png', apple: '/icon-192.png' },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TaskPay',
+  },
   openGraph: {
     type: 'website',
     siteName: 'TaskPay',
@@ -52,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <FloatingChatWrapper />
             </Suspense>
             <TaskBot />
+            <InstallBanner />
           </QueryProvider>
         </ThemeProvider>
         <Toaster

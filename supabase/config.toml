@@ -22,3 +22,10 @@ verify_jwt = false
 
 [functions.auto-release.cron]
 schedule = "0 * * * *"
+
+# Edge Function: monthly connects refill (runs on 1st of every month at midnight UTC)
+[functions.monthly-connects-refill]
+verify_jwt = false
+
+[functions.monthly-connects-refill.cron]
+schedule = "0 0 1 * *"
