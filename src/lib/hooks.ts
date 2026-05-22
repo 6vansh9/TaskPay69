@@ -110,6 +110,8 @@ export interface FreelancerFilters {
   max_rate?: number
   min_rating?: number
   verified?: boolean
+  available?: boolean
+  sort?: 'top_rated' | 'most_completed' | 'newest'
   page?: number
 }
 
@@ -138,6 +140,8 @@ export function useFreelancers(filters: FreelancerFilters = {}) {
   if (filters.max_rate)   params.set('max_rate', String(filters.max_rate))
   if (filters.min_rating) params.set('min_rating', String(filters.min_rating))
   if (filters.verified)   params.set('verified', 'true')
+  if (filters.available)  params.set('available', 'true')
+  if (filters.sort)       params.set('sort', filters.sort)
   if (filters.page)       params.set('page', String(filters.page))
   return useQuery({
     queryKey: ['freelancers', filters],

@@ -5,10 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
-import { Search, X, Star, MapPin, Shield, GraduationCap, Zap, SlidersHorizontal } from 'lucide-react'
-import { useFreelancers, type FreelancerFilters } from '@/lib/hooks'
+import { Search, X, Star, MapPin, Shield, GraduationCap, Zap, SlidersHorizontal, ArrowUpDown, UserPlus } from 'lucide-react'
+import { useFreelancers, type FreelancerFilters, type FreelancerProfile } from '@/lib/hooks'
 import { formatCurrency, cn } from '@/lib/utils'
 import SaveFreelancerButton from '@/components/freelancers/SaveFreelancerButton'
+import InviteToJobModal from '@/components/freelancers/InviteToJobModal'
 
 const POPULAR_SKILLS = [
   'React', 'Node.js', 'Python', 'UI/UX Design', 'TypeScript',
@@ -22,6 +23,12 @@ const RATE_PRESETS = [
   { label: '₹1,500–₹3,000/hr', min: 1500, max: 3000 },
   { label: '₹3,000+/hr', min: 3000, max: 0 },
 ]
+
+const SORT_OPTIONS = [
+  { value: 'top_rated',       label: 'Top Rated'          },
+  { value: 'most_completed',  label: 'Most Jobs Completed' },
+  { value: 'newest',          label: 'Newest'              },
+] as const
 
 function SkeletonCard() {
   return (
@@ -41,102 +48,136 @@ function SkeletonCard() {
   )
 }
 
-function FreelancerCard({ freelancer, savedInit = false }: { freelancer: import('@/lib/hooks').FreelancerProfile; savedInit?: boolean }) {
+function FreelancerCard({
+  freelancer,
+  savedInit = false,
+  isClient,
+}: {
+  freelancer: FreelancerProfile
+  savedInit?: boolean
+  isClient?: boolean
+}) {
   const f = freelancer
   const skills = f.skills ?? []
   const initials = (f.full_name ?? 'F').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   return (
-    <Link href={`/profile/${f.id}`} className="card card-hover p-5 flex gap-4 group relative">
-      {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        {f.avatar_url ? (
-          <img src={f.avatar_url} alt={f.full_name ?? ''} className="w-16 h-16 rounded-full object-cover" />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-[#14a800]/20 flex items-center justify-center text-lg font-bold text-[#14a800]">
-            {initials}
-          </div>
-        )}
-        {f.is_available && (
-          <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#14a800] border-2 border-border" title="Available now" />
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-semibold text-foreground group-hover:text-[#14a800] transition-colors truncate">
-              {f.full_name ?? 'Freelancer'}
-            </h3>
-            {f.title && (
-              <p className="text-sm text-muted-foreground truncate mt-0.5">{f.title}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {f.hourly_rate != null && f.hourly_rate > 0 && (
-              <div className="text-right">
-                <span className="font-bold text-[#14a800]">{formatCurrency(f.hourly_rate)}</span>
-                <span className="text-xs text-[var(--faint)]">/hr</span>
-              </div>
-            )}
-            <SaveFreelancerButton freelancerId={f.id} initialSaved={savedInit} />
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
-          {f.rating > 0 && (
-            <span className="flex items-center gap-1 text-amber-500 font-medium">
-              <Star className="w-3 h-3 fill-current" />
-              {f.rating.toFixed(1)}
-              <span className="text-[var(--faint)] font-normal">({f.review_count})</span>
-            </span>
+    <>
+      <div className="card p-5 flex gap-4">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          {f.avatar_url ? (
+            <img src={f.avatar_url} alt={f.full_name ?? ''} className="w-16 h-16 rounded-full object-cover" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-[#14a800]/20 flex items-center justify-center text-lg font-bold text-[#14a800]">
+              {initials}
+            </div>
           )}
-          {f.jobs_completed > 0 && (
-            <span>{f.jobs_completed} job{f.jobs_completed !== 1 ? 's' : ''} done</span>
-          )}
-          {f.location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {f.location}
-            </span>
+          {f.is_available && (
+            <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#14a800] border-2 border-border" title="Available now" />
           )}
         </div>
 
-        {/* Verification badges */}
-        {(f.phone_verified || f.edu_verified) && (
-          <div className="flex items-center gap-1.5 mt-1.5">
-            {f.phone_verified && (
-              <span className="badge badge-green gap-0.5 text-[11px]">
-                <Shield className="w-3 h-3" /> ID Verified
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-foreground truncate">{f.full_name ?? 'Freelancer'}</h3>
+              {f.title && <p className="text-sm text-muted-foreground truncate mt-0.5">{f.title}</p>}
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {f.hourly_rate != null && f.hourly_rate > 0 && (
+                <div className="text-right">
+                  <span className="font-bold text-[#14a800]">{formatCurrency(f.hourly_rate)}</span>
+                  <span className="text-xs text-[var(--faint)]">/hr</span>
+                </div>
+              )}
+              <SaveFreelancerButton freelancerId={f.id} initialSaved={savedInit} />
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+            {f.rating > 0 && (
+              <span className="flex items-center gap-1 text-amber-500 font-medium">
+                <Star className="w-3 h-3 fill-current" />
+                {f.rating.toFixed(1)}
+                <span className="text-[var(--faint)] font-normal">({f.review_count})</span>
               </span>
             )}
-            {f.edu_verified && (
-              <span className="badge badge-blue gap-0.5 text-[11px]">
-                <GraduationCap className="w-3 h-3" /> Student
+            {f.jobs_completed > 0 && (
+              <span>{f.jobs_completed} job{f.jobs_completed !== 1 ? 's' : ''} done</span>
+            )}
+            {f.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3" /> {f.location}
               </span>
             )}
           </div>
-        )}
 
-        {/* Skills */}
-        {skills.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {skills.slice(0, 5).map(s => (
-              <span key={s} className="badge badge-gray text-[11px]">{s}</span>
-            ))}
-            {skills.length > 5 && (
-              <span className="badge badge-gray text-[11px]">+{skills.length - 5}</span>
+          {/* Verification badges */}
+          {(f.phone_verified || f.edu_verified) && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {f.phone_verified && (
+                <span className="badge badge-green gap-0.5 text-[11px]">
+                  <Shield className="w-3 h-3" /> ID Verified
+                </span>
+              )}
+              {f.edu_verified && (
+                <span className="badge badge-blue gap-0.5 text-[11px]">
+                  <GraduationCap className="w-3 h-3" /> Student
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Skills */}
+          {skills.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {skills.slice(0, 5).map(s => (
+                <span key={s} className="badge badge-gray text-[11px]">{s}</span>
+              ))}
+              {skills.length > 5 && (
+                <span className="badge badge-gray text-[11px]">+{skills.length - 5}</span>
+              )}
+            </div>
+          )}
+
+          {/* Bio snippet */}
+          {f.bio && (
+            <p className="text-xs text-[var(--faint)] line-clamp-2 mt-2 leading-relaxed">{f.bio}</p>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 mt-3">
+            <Link
+              href={`/profile/${f.id}`}
+              className="flex-1 btn btn-secondary btn-sm justify-center text-xs"
+            >
+              View Profile
+            </Link>
+            {isClient && (
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#14a800]/40 text-[#14a800] text-xs font-medium hover:bg-[#14a800]/8 transition-colors"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                Invite to Job
+              </button>
             )}
           </div>
-        )}
-
-        {/* Bio snippet */}
-        {f.bio && (
-          <p className="text-xs text-[var(--faint)] line-clamp-2 mt-2 leading-relaxed">{f.bio}</p>
-        )}
+        </div>
       </div>
-    </Link>
+
+      {inviteOpen && (
+        <InviteToJobModal
+          freelancerId={f.id}
+          freelancerName={f.full_name ?? 'this freelancer'}
+          onClose={() => setInviteOpen(false)}
+        />
+      )}
+    </>
   )
 }
 
@@ -146,12 +187,23 @@ function FreelancersContent() {
   const [searchInput, setSearchInput] = useState(sp.get('q') ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [savedFreelancerIds, setSavedFreelancerIds] = useState<Set<string>>(new Set())
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     fetch('/api/bookmarks/freelancers')
       .then(r => r.ok ? r.json() : { ids: [] })
       .then(({ ids }) => setSavedFreelancerIds(new Set(ids ?? [])))
       .catch(() => {})
+
+    // Detect client role for "Invite to Job" button
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      const supabase = createClient()
+      supabase.auth.getUser().then(async ({ data: { user } }) => {
+        if (!user) return
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        setIsClient(profile?.role === 'client')
+      })
+    }).catch(() => {})
   }, [])
 
   const filters: FreelancerFilters = {
@@ -161,6 +213,8 @@ function FreelancersContent() {
     max_rate:   parseFloat(sp.get('max_rate') ?? '0') || undefined,
     min_rating: parseFloat(sp.get('min_rating') ?? '0') || undefined,
     verified:   sp.get('verified') === 'true' || undefined,
+    available:  sp.get('available') === 'true' || undefined,
+    sort:       (sp.get('sort') as FreelancerFilters['sort']) || undefined,
     page:       parseInt(sp.get('page') ?? '1'),
   }
 
@@ -178,13 +232,15 @@ function FreelancersContent() {
     setParam('q', searchInput.trim() || null)
   }
 
-  const activeFiltersCount = ['skill', 'min_rate', 'max_rate', 'min_rating', 'verified'].filter(k => sp.has(k)).length
+  const activeFiltersCount = ['skill', 'min_rate', 'max_rate', 'min_rating', 'verified', 'available'].filter(k => sp.has(k)).length
   const selectedSkill = sp.get('skill') ?? ''
   const selectedRate  = RATE_PRESETS.find(r =>
     String(r.min) === (sp.get('min_rate') ?? '0') &&
     String(r.max) === (sp.get('max_rate') ?? '0')
   )
-  const verifiedOnly = sp.get('verified') === 'true'
+  const verifiedOnly  = sp.get('verified') === 'true'
+  const availableOnly = sp.get('available') === 'true'
+  const currentSort   = sp.get('sort') ?? 'top_rated'
 
   const FilterPanel = () => (
     <div className="space-y-5">
@@ -267,6 +323,29 @@ function FreelancersContent() {
         </div>
       </div>
 
+      {/* Available Now */}
+      <div>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <div
+            role="switch"
+            aria-checked={availableOnly}
+            onClick={() => setParam('available', availableOnly ? null : 'true')}
+            className={cn(
+              'relative w-9 h-5 rounded-full transition-colors cursor-pointer',
+              availableOnly ? 'bg-[#14a800]' : 'bg-muted'
+            )}
+          >
+            <span className={cn(
+              'absolute top-0.5 w-4 h-4 bg-card rounded-full shadow-sm transition-transform',
+              availableOnly ? 'left-[calc(100%-18px)]' : 'left-0.5'
+            )} />
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-foreground">
+            <span className="w-2 h-2 rounded-full bg-[#14a800]" /> Available Now
+          </div>
+        </label>
+      </div>
+
       {/* Verified only */}
       <div>
         <label className="flex items-center gap-3 cursor-pointer">
@@ -285,7 +364,7 @@ function FreelancersContent() {
             )} />
           </div>
           <div className="flex items-center gap-1.5 text-sm text-foreground">
-            <Shield className="w-3.5 h-3.5 text-[#14a800]" /> Verified only
+            <Shield className="w-3.5 h-3.5 text-[#14a800]" /> Verified Only
           </div>
         </label>
       </div>
@@ -371,7 +450,7 @@ function FreelancersContent() {
           {/* Main list */}
           <div className="flex-1 min-w-0">
             {/* Active filter chips */}
-            {(selectedSkill || verifiedOnly || sp.get('min_rating') || sp.get('min_rate')) && (
+            {(selectedSkill || verifiedOnly || availableOnly || sp.get('min_rating') || sp.get('min_rate')) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {selectedSkill && (
                   <button onClick={() => setParam('skill', null)}
@@ -391,6 +470,12 @@ function FreelancersContent() {
                     {selectedRate?.label ?? 'Custom rate'} <X className="w-3 h-3" />
                   </button>
                 )}
+                {availableOnly && (
+                  <button onClick={() => setParam('available', null)}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#14a800]/10 border border-[#14a800]/30 text-sm text-[#14a800]">
+                    <span className="w-2 h-2 rounded-full bg-[#14a800]" /> Available Now <X className="w-3 h-3" />
+                  </button>
+                )}
                 {verifiedOnly && (
                   <button onClick={() => setParam('verified', null)}
                     className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#14a800]/10 border border-[#14a800]/30 text-sm text-[#14a800]">
@@ -400,8 +485,8 @@ function FreelancersContent() {
               </div>
             )}
 
-            {/* Results count */}
-            <div className="flex items-center justify-between mb-4">
+            {/* Results count + sort */}
+            <div className="flex items-center justify-between mb-4 gap-3">
               <p className="text-sm text-muted-foreground">
                 {isLoading ? 'Loading…' : (
                   <>
@@ -411,6 +496,18 @@ function FreelancersContent() {
                   </>
                 )}
               </p>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <select
+                  value={currentSort}
+                  onChange={e => setParam('sort', e.target.value === 'top_rated' ? null : e.target.value)}
+                  className="input w-auto text-xs py-1.5 pr-7"
+                >
+                  {SORT_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Skeletons */}
@@ -432,7 +529,12 @@ function FreelancersContent() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     {data!.freelancers.map(f => (
-                      <FreelancerCard key={f.id} freelancer={f} savedInit={savedFreelancerIds.has(f.id)} />
+                      <FreelancerCard
+                        key={f.id}
+                        freelancer={f}
+                        savedInit={savedFreelancerIds.has(f.id)}
+                        isClient={isClient}
+                      />
                     ))}
                   </div>
                 )}

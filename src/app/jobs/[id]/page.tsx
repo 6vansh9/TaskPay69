@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { formatCurrency, timeAgo } from '@/lib/utils'
-import { Briefcase, Clock, MapPin, Star, Users, ChevronRight, Shield } from 'lucide-react'
+import { Briefcase, Clock, MapPin, Star, Users, ChevronRight, Shield, CheckCircle2, XCircle } from 'lucide-react'
+import ClientJobOwnerView from '@/components/jobs/ClientJobOwnerView'
 
 const LEVEL_LABEL: Record<string, string> = { entry: 'Entry Level', intermediate: 'Intermediate', expert: 'Expert' }
 
@@ -84,11 +85,101 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const matchedSkills = skills.filter(s => freelancerSkills.map(x => x.toLowerCase()).includes(s.toLowerCase()))
   const matchPct = skills.length > 0 ? Math.round((matchedSkills.length / skills.length) * 100) : 0
 
+  const statusBadge = {
+    open:        { label: 'Open',        cls: 'badge-green'  },
+    in_progress: { label: 'In Progress', cls: 'badge-blue'   },
+    closed:      { label: 'Closed',      cls: 'badge-gray'   },
+    complete:    { label: 'Completed',   cls: 'badge-gray'   },
+  }[job.status as string] ?? { label: job.status, cls: 'badge-gray' }
+
+  const JobHeaderCard = () => (
+    <div className="card p-6">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex-1">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {job.category && <span className="badge badge-gray">{job.category}</span>}
+            <span className="badge badge-orange">{LEVEL_LABEL[job.level ?? job.experience_level] ?? job.experience_level}</span>
+            <span className={`badge ${statusBadge.cls} capitalize flex items-center gap-1`}>
+              {job.status === 'open'
+                ? <CheckCircle2 className="w-3 h-3" />
+                : job.status === 'closed' || job.status === 'complete'
+                ? <XCircle className="w-3 h-3" />
+                : <Clock className="w-3 h-3" />}
+              {statusBadge.label}
+            </span>
+            {!isOwner && matchPct > 0 && (
+              <span className={`badge ${matchPct >= 70 ? 'badge-green' : 'badge-orange'}`}>{matchPct}% skill match</span>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-1">{job.title}</h1>
+          <p className="text-sm text-muted-foreground">Posted {timeAgo(job.created_at)}</p>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-[#14a800]">{budgetLabel}</div>
+          <div className="text-xs text-muted-foreground capitalize">{job.budget_type} price</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 py-4 border-y border-border">
+        {[
+          { icon: Clock,    label: 'Duration',  value: job.duration },
+          { icon: Users,    label: 'Proposals', value: `${job.proposals_count ?? job.bid_count ?? 0}` },
+          { icon: Briefcase,label: 'Type',      value: job.job_type === 'fixed' ? 'Fixed Price' : 'Hourly' },
+        ].map(({ icon: Icon, label, value }) => value && (
+          <div key={label} className="flex items-center gap-2 text-sm">
+            <Icon className="w-4 h-4 text-muted-foreground" />
+            <div><div className="text-muted-foreground text-xs">{label}</div><div className="font-medium text-foreground">{value}</div></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <div className="flex flex-col min-h-screen bg-card">
       <Header />
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
-        {/* Breadcrumb */}
+
+        {/* ── OWNER (client) VIEW ─────────────────────────────── */}
+        {isOwner ? (
+          <>
+            <nav className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
+              <Link href="/my-jobs" className="hover:text-[#14a800]">My Jobs</Link>
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span className="text-foreground truncate max-w-xs">{job.title}</span>
+            </nav>
+            <div className="space-y-4">
+              <JobHeaderCard />
+              <div className="card p-6">
+                <h2 className="font-semibold text-foreground mb-3">Job Description</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{job.description}</p>
+              </div>
+              {skills.length > 0 && (
+                <div className="card p-6">
+                  <h2 className="font-semibold text-foreground mb-3">Required Skills</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map(s => <span key={s} className="badge badge-gray text-sm px-3 py-1.5">{s}</span>)}
+                  </div>
+                </div>
+              )}
+              <ClientJobOwnerView
+                job={{
+                  id: job.id,
+                  title: job.title,
+                  status: job.status,
+                  budget_type: job.budget_type ?? 'fixed',
+                  skills: skills,
+                  proposals_count: job.proposals_count ?? 0,
+                  bid_count: job.bid_count ?? 0,
+                  created_at: job.created_at,
+                }}
+              />
+            </div>
+          </>
+        ) : (
+
+        /* ── FREELANCER / PUBLIC VIEW ────────────────────────── */
+        <>
         <nav className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
           <Link href="/jobs" className="hover:text-[#14a800]">Jobs</Link>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -98,40 +189,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         <div className="flex gap-6 items-start flex-col lg:flex-row">
           {/* Main */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* Header card */}
-            <div className="card p-6">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex-1">
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {job.category && <span className="badge badge-gray">{job.category}</span>}
-                    <span className="badge badge-orange">{LEVEL_LABEL[job.level ?? job.experience_level] ?? job.experience_level}</span>
-                    {job.status !== 'open' && <span className="badge badge-red capitalize">{job.status.replace('_', ' ')}</span>}
-                    {matchPct > 0 && (
-                      <span className={`badge ${matchPct >= 70 ? 'badge-green' : 'badge-orange'}`}>{matchPct}% skill match</span>
-                    )}
-                  </div>
-                  <h1 className="text-2xl font-bold text-foreground mb-1">{job.title}</h1>
-                  <p className="text-sm text-muted-foreground">Posted {timeAgo(job.created_at)}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-[#14a800]">{budgetLabel}</div>
-                  <div className="text-xs text-muted-foreground capitalize">{job.budget_type} price</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 py-4 border-y border-border">
-                {[
-                  { icon: Clock, label: 'Duration', value: job.duration },
-                  { icon: Users, label: 'Proposals', value: `${job.proposals_count ?? job.bid_count ?? 0}` },
-                  { icon: Briefcase, label: 'Type', value: job.job_type === 'fixed' ? 'Fixed Price' : 'Hourly' },
-                ].map(({ icon: Icon, label, value }) => value && (
-                  <div key={label} className="flex items-center gap-2 text-sm">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    <div><div className="text-muted-foreground text-xs">{label}</div><div className="font-medium text-foreground">{value}</div></div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <JobHeaderCard />
 
             {/* Description */}
             <div className="card p-6">
@@ -154,17 +212,6 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 {matchPct > 0 && (
                   <p className="text-xs text-muted-foreground mt-2">You match {matchedSkills.length} of {skills.length} required skills.</p>
                 )}
-              </div>
-            )}
-
-            {/* Client-only: view proposals */}
-            {isOwner && (
-              <div className="card p-5 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-foreground">Manage proposals</div>
-                  <div className="text-sm text-muted-foreground">{job.proposals_count ?? 0} proposals received</div>
-                </div>
-                <Link href={`/jobs/${id}/proposals`} className="btn btn-primary">View Proposals →</Link>
               </div>
             )}
           </div>
@@ -244,6 +291,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             )}
           </div>
         </div>
+        </>
+        )}
       </main>
       <Footer />
     </div>
