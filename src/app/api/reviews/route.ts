@@ -85,13 +85,27 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // Recalculate aggregate rating on the reviewee's profile
+  const { data: allReviews } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('reviewee_id', revieweeId)
+
+  if (allReviews && allReviews.length > 0) {
+    const avgRating = allReviews.reduce((sum, r) => sum + (r.rating as number), 0) / allReviews.length
+    await supabase.from('profiles').update({
+      rating: Math.round(avgRating * 10) / 10,
+      review_count: allReviews.length,
+    }).eq('id', revieweeId)
+  }
+
   // Notify reviewee
   await supabase.from('notifications').insert({
     user_id: revieweeId,
-    title: 'New review received',
-    message: `You received a ${rating}-star review.`,
+    title: 'New review received ⭐',
+    message: `You received a ${rating}-star review. Check your profile.`,
     type: 'review',
-    link: `/contracts/${contract_id}`,
+    link: `/profile/${revieweeId}`,
   })
 
   return NextResponse.json(review, { status: 201 })

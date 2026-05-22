@@ -11,6 +11,8 @@ import {
 import type { Profile } from '@/types/database'
 import EarningsChart from '@/components/dashboard/EarningsChart'
 import SpendingChart from '@/components/dashboard/SpendingChart'
+import ReviewQueue from '@/components/reviews/ReviewQueue'
+import type { PendingReview } from '@/components/reviews/ReviewQueue'
 
 function timeAgoServer(dateStr: string): string {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
@@ -232,6 +234,38 @@ export default async function DashboardPage() {
     savedFreelancers = savedFLProfiles
   }
 
+  // ── Pending reviews ───────────────────────────────────────────
+  const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: completedContracts } = await supabase
+    .from('contracts')
+    .select('id, client_id, freelancer_id, client:profiles!contracts_client_id_fkey(full_name, company_name), freelancer:profiles!contracts_freelancer_id_fkey(full_name)')
+    .eq('status', 'complete')
+    .gte('updated_at', cutoff)
+    .or(`client_id.eq.${user.id},freelancer_id.eq.${user.id}`)
+
+  let pendingReviews: PendingReview[] = []
+  if (completedContracts && completedContracts.length > 0) {
+    const contractIds = completedContracts.map(c => c.id)
+    const { data: existingReviews } = await supabase
+      .from('reviews')
+      .select('contract_id')
+      .eq('reviewer_id', user.id)
+      .in('contract_id', contractIds)
+    const reviewedIds = new Set((existingReviews ?? []).map(r => r.contract_id))
+
+    pendingReviews = completedContracts
+      .filter(c => !reviewedIds.has(c.id))
+      .map(c => {
+        const isClient = c.client_id === user.id
+        type OtherProfile = { full_name?: string | null; company_name?: string | null } | null
+        const freelancerRaw = c.freelancer as unknown as OtherProfile
+        const clientRaw = c.client as unknown as OtherProfile
+        const other = isClient ? freelancerRaw : clientRaw
+        const name = other?.company_name ?? other?.full_name ?? 'your collaborator'
+        return { contractId: c.id, revieweeName: name }
+      })
+  }
+
   // ── Derived ───────────────────────────────────────────────────
   const profileComplete = isFreelancer ? calcProfileComplete(profile as Parameters<typeof calcProfileComplete>[0]) : 0
   const successRate = proposalStats.total > 0 ? Math.round((proposalStats.hired / proposalStats.total) * 100) : 0
@@ -268,6 +302,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
+      {pendingReviews.length > 0 && <ReviewQueue pending={pendingReviews} />}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Welcome */}

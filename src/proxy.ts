@@ -62,6 +62,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(dest, request.url))
   }
 
+  // ── 4b. Prevent completed users from re-entering onboarding ──────
+  if (onboardingOk && pathname.startsWith('/onboarding/')) {
+    const dest = role === 'admin' ? '/admin' : '/dashboard'
+    return NextResponse.redirect(new URL(dest, request.url))
+  }
+
   // ── 5. Role-lock onboarding pages ────────────────────────────────
   if (pathname.startsWith('/onboarding/freelancer') && role !== 'freelancer') {
     return NextResponse.redirect(new URL('/onboarding/client', request.url))
