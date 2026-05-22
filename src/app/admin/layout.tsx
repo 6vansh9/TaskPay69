@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import Image from 'next/image'
 import {
   LayoutDashboard, DollarSign, Banknote, AlertTriangle,
   Users, Briefcase, Settings, LogOut, Menu,
@@ -31,13 +30,26 @@ function SidebarInner({
 }) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Link href="/admin" onClick={onClose} className="flex items-center gap-2.5 px-4 py-4 border-b border-[var(--muted)] flex-shrink-0">
-        <Image src="/logo.png" width={28} height={28} alt="TaskPay" className="rounded-lg" />
-        <div>
-          <div className="text-sm font-bold text-foreground">taskpay</div>
-          <div className="text-[10px] text-[var(--faint)] uppercase tracking-widest">Admin</div>
-        </div>
-      </Link>
+      <div className="flex flex-col items-start gap-1.5 px-4 py-4 border-b border-[var(--muted)] flex-shrink-0">
+        <Link href="/admin" onClick={onClose}>
+          <svg viewBox="0 0 680 160" width="140" height="33" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="admin-tp-white">
+                <rect x="0" y="0" width="340" height="160"/>
+              </clipPath>
+              <clipPath id="admin-tp-green">
+                <rect x="340" y="0" width="340" height="160"/>
+              </clipPath>
+            </defs>
+            <text x="340" y="108" fontFamily="Georgia, serif" fontSize="88" fontWeight="400" letterSpacing="-3" fill="#ffffff" textAnchor="middle" clipPath="url(#admin-tp-white)">TaskPay</text>
+            <text x="340" y="108" fontFamily="Georgia, serif" fontSize="88" fontWeight="400" letterSpacing="-3" fill="#14A800" textAnchor="middle" clipPath="url(#admin-tp-green)">TaskPay</text>
+            <line x1="340" y1="22" x2="340" y2="118" stroke="#14A800" strokeWidth="1" opacity="0.35"/>
+          </svg>
+        </Link>
+        <span style={{ background: '#14A800', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 9999 }} className="font-bold tracking-widest uppercase">
+          ADMIN
+        </span>
+      </div>
 
       <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
@@ -115,8 +127,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setMobileOpen(true)} className="text-muted-foreground hover:text-foreground">
             <Menu className="w-5 h-5" />
           </button>
-          <Image src="/logo.png" width={22} height={22} alt="TaskPay" className="rounded" />
-          <span className="text-sm font-semibold text-foreground">TaskPay Admin</span>
+          <svg viewBox="0 0 680 160" width="110" height="26" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="admin-mob-white">
+                <rect x="0" y="0" width="340" height="160"/>
+              </clipPath>
+              <clipPath id="admin-mob-green">
+                <rect x="340" y="0" width="340" height="160"/>
+              </clipPath>
+            </defs>
+            <text x="340" y="108" fontFamily="Georgia, serif" fontSize="88" fontWeight="400" letterSpacing="-3" fill="#ffffff" textAnchor="middle" clipPath="url(#admin-mob-white)">TaskPay</text>
+            <text x="340" y="108" fontFamily="Georgia, serif" fontSize="88" fontWeight="400" letterSpacing="-3" fill="#14A800" textAnchor="middle" clipPath="url(#admin-mob-green)">TaskPay</text>
+            <line x1="340" y1="22" x2="340" y2="118" stroke="#14A800" strokeWidth="1" opacity="0.35"/>
+          </svg>
+          <span style={{ background: '#14A800', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 9999 }} className="font-bold tracking-widest uppercase">
+            ADMIN
+          </span>
         </div>
         {children}
       </div>
