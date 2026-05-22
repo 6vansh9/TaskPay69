@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -8,6 +9,39 @@ import { formatCurrency, timeAgo } from '@/lib/utils'
 import { Briefcase, Clock, MapPin, Star, Users, ChevronRight, Shield } from 'lucide-react'
 
 const LEVEL_LABEL: Record<string, string> = { entry: 'Entry Level', intermediate: 'Intermediate', expert: 'Expert' }
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: job } = await supabase
+    .from('jobs')
+    .select('title, description, budget_min, budget_max, budget_type, category')
+    .eq('id', id)
+    .single()
+
+  if (!job) return { title: 'Job Not Found' }
+
+  const budgetLabel = job.budget_type === 'fixed'
+    ? `₹${job.budget_min?.toLocaleString('en-IN')} – ₹${job.budget_max?.toLocaleString('en-IN')}`
+    : `₹${job.budget_min?.toLocaleString('en-IN')}/hr`
+  const desc = job.description ? job.description.slice(0, 155) + (job.description.length > 155 ? '…' : '') : ''
+
+  return {
+    title: job.title,
+    description: `${budgetLabel} · ${desc}`,
+    openGraph: {
+      title: `${job.title} | TaskPay`,
+      description: `${budgetLabel} · ${desc}`,
+      images: [{ url: '/hero-work.jpg', width: 1200, height: 630, alt: job.title }],
+    },
+    twitter: {
+      title: `${job.title} | TaskPay`,
+      description: `${budgetLabel} · ${desc}`,
+      images: ['/hero-work.jpg'],
+    },
+    alternates: { canonical: `https://taskpay69.vercel.app/jobs/${id}` },
+  }
+}
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

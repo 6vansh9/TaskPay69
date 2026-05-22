@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer'
 import { Search, X, Star, MapPin, Shield, GraduationCap, Zap, SlidersHorizontal } from 'lucide-react'
 import { useFreelancers, type FreelancerFilters } from '@/lib/hooks'
 import { formatCurrency, cn } from '@/lib/utils'
+import SaveFreelancerButton from '@/components/freelancers/SaveFreelancerButton'
 
 const POPULAR_SKILLS = [
   'React', 'Node.js', 'Python', 'UI/UX Design', 'TypeScript',
@@ -40,13 +41,13 @@ function SkeletonCard() {
   )
 }
 
-function FreelancerCard({ freelancer }: { freelancer: import('@/lib/hooks').FreelancerProfile }) {
+function FreelancerCard({ freelancer, savedInit = false }: { freelancer: import('@/lib/hooks').FreelancerProfile; savedInit?: boolean }) {
   const f = freelancer
   const skills = f.skills ?? []
   const initials = (f.full_name ?? 'F').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
-    <Link href={`/profile/${f.id}`} className="card card-hover p-5 flex gap-4 group">
+    <Link href={`/profile/${f.id}`} className="card card-hover p-5 flex gap-4 group relative">
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         {f.avatar_url ? (
@@ -72,12 +73,15 @@ function FreelancerCard({ freelancer }: { freelancer: import('@/lib/hooks').Free
               <p className="text-sm text-muted-foreground truncate mt-0.5">{f.title}</p>
             )}
           </div>
-          {f.hourly_rate != null && f.hourly_rate > 0 && (
-            <div className="text-right flex-shrink-0">
-              <span className="font-bold text-[#14a800]">{formatCurrency(f.hourly_rate)}</span>
-              <span className="text-xs text-[var(--faint)]">/hr</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {f.hourly_rate != null && f.hourly_rate > 0 && (
+              <div className="text-right">
+                <span className="font-bold text-[#14a800]">{formatCurrency(f.hourly_rate)}</span>
+                <span className="text-xs text-[var(--faint)]">/hr</span>
+              </div>
+            )}
+            <SaveFreelancerButton freelancerId={f.id} initialSaved={savedInit} />
+          </div>
         </div>
 
         {/* Stats */}
@@ -141,6 +145,14 @@ function FreelancersContent() {
   const router = useRouter()
   const [searchInput, setSearchInput] = useState(sp.get('q') ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [savedFreelancerIds, setSavedFreelancerIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    fetch('/api/bookmarks/freelancers')
+      .then(r => r.ok ? r.json() : { ids: [] })
+      .then(({ ids }) => setSavedFreelancerIds(new Set(ids ?? [])))
+      .catch(() => {})
+  }, [])
 
   const filters: FreelancerFilters = {
     q:          sp.get('q')          ?? '',
@@ -420,7 +432,7 @@ function FreelancersContent() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     {data!.freelancers.map(f => (
-                      <FreelancerCard key={f.id} freelancer={f} />
+                      <FreelancerCard key={f.id} freelancer={f} savedInit={savedFreelancerIds.has(f.id)} />
                     ))}
                   </div>
                 )}

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
-import { ArrowRight, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, GraduationCap, Briefcase, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const TRENDING = [
@@ -270,6 +270,144 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── NEW A. Our Mission ──────────────────────────────────── */}
+      <section className="border-b border-white/8 py-20 md:py-28 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-24">
+
+            {/* Left 40% — italic Georgia green */}
+            <div className="flex-shrink-0 lg:w-[40%]">
+              <p
+                className="leading-[1.08] text-[#14a800]"
+                style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 'clamp(44px, 6vw, 72px)' }}
+              >
+                the freedom<br />to earn
+              </p>
+            </div>
+
+            {/* Right 60% */}
+            <div className="lg:w-[60%]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#14a800]">Our Mission</p>
+              <h2
+                className="mt-4 text-3xl font-bold tracking-wide text-white md:text-4xl lg:text-[2.6rem]"
+                style={{ fontFamily: 'Georgia, serif' }}
+              >
+                SKILLS DESERVE TO BE PAID
+              </h2>
+              <div className="mt-6 space-y-4 text-[15px] leading-[1.75] text-[#a3a3a3]">
+                <p>Every student has a skill. Every skill deserves a paycheck. TaskPay was born from a simple frustration — being a college student with real skills but no way to monetize them.</p>
+                <p>We applied to dozens of internships. Got ignored. So we built the solution ourselves.</p>
+                <p>TaskPay is India&apos;s first student-centric freelance marketplace — built by a student, for students. Whether you design, code, write, or create — there is a client waiting for you right here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── NEW B. What We Offer ─────────────────────────────────── */}
+      <section className="border-b border-white/8 py-20 md:py-28 bg-[#111111]">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+
+          <div className="mb-14 text-center">
+            <h2 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">What We Offer</h2>
+            <p className="mt-4 text-base text-[#a3a3a3] md:text-lg">Everything you need to earn from your skills</p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Card 1 */}
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-8">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-[#14a800]/15">
+                <GraduationCap className="size-6 text-[#14a800]" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Student-First Platform</h3>
+              <p className="mt-3 text-sm leading-relaxed text-[#a3a3a3]">
+                Built specifically for college and school students. No experience required — just skills and dedication to deliver great work.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-8">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-[#14a800]/15">
+                <Briefcase className="size-6 text-[#14a800]" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Real Projects, Real Pay</h3>
+              <p className="mt-3 text-sm leading-relaxed text-[#a3a3a3]">
+                Connect with real clients who need real work. From logo design to web development — every skill has demand and every project pays.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-8">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-[#14a800]/15">
+                <ShieldCheck className="size-6 text-[#14a800]" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Secure Escrow Payments</h3>
+              <p className="mt-3 text-sm leading-relaxed text-[#a3a3a3]">
+                Get paid safely. Your money is held in escrow until you deliver — no more working for free and hoping clients pay.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── NEW C. What Makes Us Different ──────────────────────── */}
+      <section className="border-b border-white/8 py-20 md:py-28 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+
+          <div className="mb-14 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#14a800]">Why TaskPay</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">What Makes Us Different?</h2>
+            <p className="mt-4 text-base text-[#a3a3a3] md:text-lg">We are not just another freelance platform</p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {/* Card 1 */}
+            <div className="rounded-2xl border-l-[3px] border-[#14a800] bg-[#111111] p-8">
+              <div className="mb-4 flex items-center gap-3">
+                <CheckCircle2 className="size-5 flex-shrink-0 text-[#14a800]" />
+                <h3 className="text-lg font-semibold text-white">Student Verified Badges</h3>
+              </div>
+              <p className="text-sm leading-relaxed text-[#a3a3a3]">
+                Our unique .edu email verification gives student freelancers a trust badge that clients love and competitors cannot offer.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="rounded-2xl border-l-[3px] border-[#14a800] bg-[#111111] p-8">
+              <div className="mb-4 flex items-center gap-3">
+                <CheckCircle2 className="size-5 flex-shrink-0 text-[#14a800]" />
+                <h3 className="text-lg font-semibold text-white">Built for India</h3>
+              </div>
+              <p className="text-sm leading-relaxed text-[#a3a3a3]">
+                INR payments, Indian universities, Indian clients. No dollar conversion, no international payment headaches.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="rounded-2xl border-l-[3px] border-[#14a800] bg-[#111111] p-8">
+              <div className="mb-4 flex items-center gap-3">
+                <CheckCircle2 className="size-5 flex-shrink-0 text-[#14a800]" />
+                <h3 className="text-lg font-semibold text-white">Zero Experience Required</h3>
+              </div>
+              <p className="text-sm leading-relaxed text-[#a3a3a3]">
+                Traditional platforms ignore beginners. We give students their first shot — because everyone starts somewhere.
+              </p>
+            </div>
+
+            {/* Card 4 */}
+            <div className="rounded-2xl border-l-[3px] border-[#14a800] bg-[#111111] p-8">
+              <div className="mb-4 flex items-center gap-3">
+                <CheckCircle2 className="size-5 flex-shrink-0 text-[#14a800]" />
+                <h3 className="text-lg font-semibold text-white">AI-Powered Tools</h3>
+              </div>
+              <p className="text-sm leading-relaxed text-[#a3a3a3]">
+                AI-assisted bio writing, cover letter generation, and smart job matching — because students deserve the best tools too.
+              </p>
             </div>
           </div>
         </div>

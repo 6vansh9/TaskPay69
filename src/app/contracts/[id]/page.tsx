@@ -8,6 +8,7 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ChatWindow from '@/components/chat/ChatWindow'
 import MilestoneTracker from '@/components/contracts/MilestoneTracker'
+import ContractTimeline from '@/components/contracts/ContractTimeline'
 import EscrowModal from '@/components/payments/EscrowModal'
 import { formatCurrency, timeAgo } from '@/lib/utils'
 import {
@@ -42,6 +43,7 @@ interface ContractData {
   deadline: string | null
   completed_at: string | null
   escrow_funded: boolean | null
+  disputeId?: string | null
   job: { id: string; title: string; category: string | null; description: string | null; budget_type: string } | null
   client: ContractProfile | null
   freelancer: ContractProfile | null
@@ -117,6 +119,29 @@ export default function ContractPage({ params }: { params: Promise<{ id: string 
     }
 
     if (data.escrow_funded || (data as unknown as { razorpay_payment_id: string | null }).razorpay_payment_id) setEscrowFunded(true)
+
+    // Fetch dispute ID if contract is disputed
+    if (data.status === 'disputed') {
+      const supabase2 = createClient()
+      const { data: disputeRow } = await supabase2
+        .from('disputes')
+        .select('id')
+        .eq('contract_id', id)
+        .eq('status', 'open')
+        .maybeSingle()
+      if (!disputeRow) {
+        const { data: reviewRow } = await supabase2
+          .from('disputes')
+          .select('id')
+          .eq('contract_id', id)
+          .eq('status', 'under_review')
+          .maybeSingle()
+        if (reviewRow) setContract(prev => prev ? { ...prev, disputeId: (reviewRow as { id: string }).id } : prev)
+      } else {
+        setContract(prev => prev ? { ...prev, disputeId: (disputeRow as { id: string }).id } : prev)
+      }
+    }
+
     setLoading(false)
   }
 
@@ -308,6 +333,13 @@ export default function ContractPage({ params }: { params: Promise<{ id: string 
               </button>
             )}
 
+            {/* Both: View active dispute */}
+            {contract.status === 'disputed' && contract.disputeId && (
+              <Link href={`/disputes/${contract.disputeId}`} className="btn btn-sm gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20">
+                <AlertCircle className="w-4 h-4" /> View Dispute
+              </Link>
+            )}
+
             {/* Client: Cancel */}
             {isClient && ['pending', 'active'].includes(contract.status) && (
               <button onClick={() => updateStatus('cancelled')} disabled={updating}
@@ -379,6 +411,13 @@ export default function ContractPage({ params }: { params: Promise<{ id: string 
                 </div>
               </div>
             )}
+
+            <ContractTimeline
+              milestones={contract.milestones ?? []}
+              contractStatus={contract.status}
+              contractCreatedAt={contract.created_at}
+              contractAmount={contract.amount ?? 0}
+            />
 
             <MilestoneTracker
               contractId={id}

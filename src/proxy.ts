@@ -96,6 +96,9 @@ export async function proxy(request: NextRequest) {
     if (pathname === '/jobs') return NextResponse.redirect(new URL('/my-jobs', request.url))
     if (isJobApplyPath) return NextResponse.redirect(new URL('/dashboard', request.url))
     if (pathname === '/profile/edit') return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname === '/connects' || pathname.startsWith('/connects/')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
   }
 
   return response
@@ -110,8 +113,9 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === '/') return true
   // All auth flow pages (login, register, callback, verify-email, select-role, reset-password)
   if (pathname.startsWith('/auth/')) return true
-  // /jobs feed is protected (client vs freelancer gate), not public
-  if (pathname === '/jobs') return false
+  // /jobs feed is public for unauthenticated visitors (SEO) — authenticated clients
+  // are redirected to /my-jobs later in section 7
+  if (pathname === '/jobs') return true
   // Individual job detail pages are public (read-only / SEO)
   if (
     pathname.startsWith('/jobs/') &&
@@ -123,6 +127,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith('/profile/') && pathname !== '/profile/edit') return true
   // Public freelancers directory
   if (pathname.startsWith('/freelancers')) return true
+  // Help page is public
+  if (pathname === '/help') return true
   return false
 }
 

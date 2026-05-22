@@ -180,10 +180,13 @@ function ApplyContent() {
         {!hasEnoughConnects && (
           <div className="flex items-center gap-3 bg-red-950/30 border border-red-900/50 rounded-xl p-4 mb-4">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-red-400">Not enough connects</p>
               <p className="text-xs text-red-600">This job costs {cost} connects. You have {connectsBalance}.</p>
             </div>
+            <Link href="/connects" className="text-xs font-semibold text-[#14a800] bg-[#14a800]/10 hover:bg-[#14a800]/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+              Buy Connects →
+            </Link>
           </div>
         )}
 

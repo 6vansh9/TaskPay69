@@ -108,6 +108,7 @@ function JobsContent() {
   const [searchInput, setSearchInput] = useState(sp.get('q') ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [freelancerSkills, setFreelancerSkills] = useState<string[]>([])
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -136,6 +137,10 @@ function JobsContent() {
           if (profile?.role === 'freelancer' && profile.skills) setFreelancerSkills(profile.skills)
         })
     })
+    fetch('/api/bookmarks/jobs')
+      .then(r => r.ok ? r.json() : { ids: [] })
+      .then(({ ids }) => setSavedJobIds(new Set(ids ?? [])))
+      .catch(() => {})
   }, [])
 
   // Close suggestions on outside click
@@ -301,7 +306,7 @@ function JobsContent() {
                 <div className="flex flex-col gap-3">
                   {recommendedJobs.map(({ job }) => (
                     <div key={job.id} onClick={() => saveRecentJob(job)}>
-                      <JobCard job={job} freelancerSkills={freelancerSkills} />
+                      <JobCard job={job} freelancerSkills={freelancerSkills} saved={savedJobIds.has(job.id)} />
                     </div>
                   ))}
                 </div>
@@ -365,7 +370,7 @@ function JobsContent() {
                   <div className="flex flex-col gap-3">
                     {data.jobs.map(job => (
                       <div key={job.id} onClick={() => saveRecentJob(job)}>
-                        <JobCard job={job} freelancerSkills={freelancerSkills} />
+                        <JobCard job={job} freelancerSkills={freelancerSkills} saved={savedJobIds.has(job.id)} />
                       </div>
                     ))}
                   </div>

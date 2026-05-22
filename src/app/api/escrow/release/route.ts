@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendPaymentReceivedEmail, sendReviewRequestEmail } from '@/lib/email'
 
 const PLATFORM_FEE_PCT = 0.10
 
@@ -24,6 +25,18 @@ export async function POST(request: NextRequest) {
   if (!contract) return NextResponse.json({ error: 'Contract not found' }, { status: 404 })
   if (contract.client_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   if (!contract.razorpay_payment_id) return NextResponse.json({ error: 'Escrow not funded yet' }, { status: 400 })
+
+  // Fetch profiles for email notifications (best-effort, don't block release)
+  const [{ data: clientProfile }, { data: freelancerProfile }, { data: contractJob }] = await Promise.all([
+    supabase.from('profiles').select('full_name, email').eq('id', user.id).single(),
+    supabase.from('profiles').select('full_name, email').eq('id', contract.freelancer_id).single(),
+    supabase.from('contracts').select('job_id, jobs:job_id(title)').eq('id', contract_id).single(),
+  ])
+  const jobTitle = (contractJob?.jobs as unknown as { title: string } | null)?.title ?? 'Your project'
+  const clientName = (clientProfile as { full_name: string | null } | null)?.full_name ?? 'Client'
+  const freelancerName = (freelancerProfile as { full_name: string | null } | null)?.full_name ?? 'Freelancer'
+  const freelancerEmail = (freelancerProfile as { email: string | null } | null)?.email ?? ''
+  const clientEmail = (clientProfile as { email: string | null } | null)?.email ?? ''
 
   // Prevent duplicate release
   const { data: existing } = await supabase
@@ -88,6 +101,36 @@ export async function POST(request: NextRequest) {
     uid: contract.freelancer_id,
     amount: freelancerPayout,
   } as never)
+
+  // Fire-and-forget emails
+  sendPaymentReceivedEmail({
+    freelancerEmail,
+    freelancerName,
+    clientName,
+    jobTitle,
+    contractId: contract_id,
+    totalAmount: amount,
+    platformFee,
+    netAmount: freelancerPayout,
+  }).catch(() => {})
+
+  sendReviewRequestEmail({
+    recipientEmail: freelancerEmail,
+    recipientName: freelancerName,
+    otherPartyName: clientName,
+    jobTitle,
+    contractId: contract_id,
+    role: 'freelancer',
+  }).catch(() => {})
+
+  sendReviewRequestEmail({
+    recipientEmail: clientEmail,
+    recipientName: clientName,
+    otherPartyName: freelancerName,
+    jobTitle,
+    contractId: contract_id,
+    role: 'client',
+  }).catch(() => {})
 
   return NextResponse.json({ success: true, freelancer_payout: freelancerPayout, platform_fee: platformFee })
 }

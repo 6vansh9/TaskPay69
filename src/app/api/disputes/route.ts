@@ -69,6 +69,8 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  const disputeId = (dispute as { id: string }).id
+
   // Freeze contract
   await supabase.from('contracts').update({ status: 'disputed' }).eq('id', contract_id)
 
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
     title: 'Dispute raised ⚠️',
     message: 'A dispute has been raised on your contract. Our team will review it.',
     type: 'dispute',
-    link: `/contracts/${contract_id}`,
+    link: `/disputes/${disputeId}`,
   })
 
   // Email both parties
@@ -104,7 +106,7 @@ export async function POST(request: NextRequest) {
         title: '⚠️ New dispute raised',
         message: `${raiserName} raised a dispute on "${jobTitle}". Review required.`,
         type: 'dispute',
-        link: '/admin/disputes',
+        link: `/disputes/${disputeId}`,
       }))
     )
   }

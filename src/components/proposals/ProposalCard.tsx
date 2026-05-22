@@ -11,10 +11,12 @@ interface Props {
   proposal: ProposalWithProfile
   jobId: string
   jobBudgetType?: string
+  matchScore?: number
+  isTopRated?: boolean
   onHired?: (contractId: string) => void
 }
 
-export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed', onHired }: Props) {
+export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed', matchScore, isTopRated, onHired }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [showHireConfirm, setShowHireConfirm] = useState(false)
   const p = proposal.profiles
@@ -67,6 +69,11 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-foreground">{p?.full_name ?? 'Freelancer'}</span>
+                {isTopRated && (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] font-semibold text-amber-400">
+                    <Star className="w-3 h-3 fill-current" /> Top Rated
+                  </span>
+                )}
                 {p?.phone_verified && (
                   <span title="Phone verified" className="badge badge-green gap-0.5">
                     <Shield className="w-3 h-3" /> Verified
@@ -75,6 +82,14 @@ export default function ProposalCard({ proposal, jobId, jobBudgetType = 'fixed',
                 {p?.edu_verified && (
                   <span title="Student verified" className="badge badge-blue gap-0.5">
                     <GraduationCap className="w-3 h-3" /> Student
+                  </span>
+                )}
+                {matchScore != null && matchScore > 0 && (
+                  <span className={cn(
+                    'badge gap-0.5',
+                    matchScore >= 70 ? 'badge-green' : matchScore >= 40 ? 'badge-orange' : 'badge-gray',
+                  )}>
+                    {matchScore}% match
                   </span>
                 )}
               </div>

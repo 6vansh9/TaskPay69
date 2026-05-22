@@ -25,6 +25,7 @@ function SkillMatchBadge({ job, freelancerSkills }: { job: JobWithProfile; freel
 export default function JobCard({ job, freelancerSkills = [], saved: savedInit = false }: Props) {
   const [bidCount, setBidCount] = useState(job.proposals_count ?? job.bid_count ?? 0)
   const [saved, setSaved] = useState(savedInit)
+  const [toggling, setToggling] = useState(false)
 
   // Real-time bid count subscription
   useEffect(() => {
@@ -67,8 +68,23 @@ export default function JobCard({ job, freelancerSkills = [], saved: savedInit =
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(job.created_at)}</span>
           <button
-            onClick={(e) => { e.preventDefault(); setSaved(v => !v) }}
-            className={cn('p-1.5 rounded-full hover:bg-card transition-colors', saved ? 'text-[#14a800]' : 'text-[var(--faint)]')}
+            onClick={async (e) => {
+              e.preventDefault()
+              if (toggling) return
+              setToggling(true)
+              try {
+                const res = await fetch('/api/bookmarks/jobs', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ job_id: job.id }),
+                })
+                if (res.ok) setSaved((await res.json()).saved)
+              } finally {
+                setToggling(false)
+              }
+            }}
+            disabled={toggling}
+            className={cn('p-1.5 rounded-full hover:bg-card transition-colors disabled:opacity-60', saved ? 'text-[#14a800]' : 'text-[var(--faint)]')}
             aria-label="Save job"
           >
             <Bookmark className="w-4 h-4" fill={saved ? 'currentColor' : 'none'} />

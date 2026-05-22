@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -81,6 +82,16 @@ export async function POST(request: NextRequest) {
     console.error('[onboarding/complete] update error:', error.message)
     return NextResponse.json({ error: 'Failed to save profile.' }, { status: 500 })
   }
+
+  const recipientName = typeof updates.full_name === 'string'
+    ? updates.full_name
+    : user.email?.split('@')[0] ?? 'there'
+
+  sendWelcomeEmail({
+    recipientEmail: user.email ?? '',
+    recipientName,
+    role: role as 'freelancer' | 'client',
+  }).catch(() => {})
 
   return NextResponse.json({ success: true })
 }

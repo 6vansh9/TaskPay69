@@ -81,9 +81,15 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
 
-  // deduct connects & increment proposals_count (best-effort)
+  // deduct connects & log transaction & increment proposals_count (best-effort)
   await Promise.all([
     supabase.from('profiles').update({ connects_balance: (profile.connects_balance ?? 0) - cost }).eq('id', user.id),
+    supabase.from('connects_transactions').insert({
+      user_id: user.id,
+      type: 'spent',
+      amount: cost,
+      description: `Proposal: ${jobInfo.title}`,
+    }),
     supabase.rpc('increment_proposals_count' as never, { job_id } as never),
   ]).catch(() => {})
 

@@ -11,7 +11,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const { data, error } = await supabaseAdmin
     .from('disputes')
-    .select(`*, contract:contract_id(id, client_id, freelancer_id, job:job_id(title))`)
+    .select(`
+      *,
+      raised_by_profile:raised_by(id, full_name, avatar_url, role),
+      contract:contract_id(
+        id, client_id, freelancer_id, amount, status, created_at,
+        job:job_id(id, title),
+        client:client_id(id, full_name, avatar_url, role),
+        freelancer:freelancer_id(id, full_name, avatar_url, role),
+        milestones(id, name, description, amount, status, due_date, delivered_at, approved_at, created_at)
+      )
+    `)
     .eq('id', id)
     .single()
 
@@ -98,14 +108,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         title: 'Dispute resolved',
         message: clientMsg,
         type: 'dispute',
-        link: `/contracts/${contract.id}`,
+        link: `/disputes/${id}`,
       },
       {
         user_id: contract.freelancer_id,
         title: 'Dispute resolved',
         message: freelancerMsg,
         type: 'dispute',
-        link: `/contracts/${contract.id}`,
+        link: `/disputes/${id}`,
       },
     ])
   }

@@ -147,6 +147,19 @@ export default function Header() {
             <>
               <MessagesNavBadge userId={user.id} dark={true} />
               <NotificationBell userId={user.id} />
+
+              {/* Connects pill — freelancer only */}
+              {isFreelancer && (
+                <Link
+                  href="/connects"
+                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/15 hover:border-purple-500/50 px-3 py-1.5 transition-colors"
+                  title="Buy Connects"
+                >
+                  <Zap className="size-3.5 text-purple-400" />
+                  <span className="text-xs font-semibold text-purple-300 tabular-nums">{user.connects_balance ?? 0}</span>
+                </Link>
+              )}
+
               <ThemeToggle />
 
               {/* Help */}
@@ -258,14 +271,19 @@ export default function Header() {
 
                       {/* Connects balance (freelancer only) */}
                       {isFreelancer && (
-                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border bg-background">
-                          <div className="flex items-center gap-2 text-sm text-foreground/70">
-                            <Zap className="size-4 text-[#14a800]" /> Connects
+                        <Link
+                          href="/connects"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border bg-background hover:bg-[#14a800]/5 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2 text-sm text-foreground/70 group-hover:text-foreground">
+                            <Zap className="size-4 text-purple-400" />
+                            <span>{user.connects_balance ?? 0} connects</span>
                           </div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {user.connects_balance ?? 0}
+                          <span className="text-xs font-semibold text-[#14a800] bg-[#14a800]/10 px-2 py-0.5 rounded-full group-hover:bg-[#14a800]/20 transition-colors">
+                            Buy →
                           </span>
-                        </div>
+                        </Link>
                       )}
 
                       {/* Sign out */}
