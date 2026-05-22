@@ -16,6 +16,9 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return Response.json({ error: 'Not authenticated' }, { status: 401 })
 
+    // Save edu_email on profile so confirm route can match it
+    await supabase.from('profiles').update({ edu_email: email }).eq('id', user.id)
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 

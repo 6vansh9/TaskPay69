@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import {
   User, Bell, Shield, Trash2, AlertTriangle,
   Loader2, CheckCircle2, Mail, Calendar,
+  Phone, GraduationCap, ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +41,216 @@ const NOTIF_LABELS: { key: keyof NotifPrefs; label: string; desc: string }[] = [
 ]
 
 const CONFIRM_PHRASE = 'delete my account'
+
+// ── Phone Verification Widget ─────────────────────────────────────────────────
+
+function PhoneVerify({ onVerified }: { onVerified: () => void }) {
+  const [step, setStep]       = useState<'idle' | 'phone' | 'otp'>('idle')
+  const [phone, setPhone]     = useState('')
+  const [otp, setOtp]         = useState('')
+  const [busy, setBusy]       = useState(false)
+
+  async function sendOtp() {
+    if (!phone.trim()) return
+    setBusy(true)
+    const res = await fetch('/api/verify/phone/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone.trim() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setBusy(false)
+    if (!res.ok) { toast.error(data.error ?? 'Failed to send OTP'); return }
+    if (data.sandbox) {
+      toast.success('Sandbox: phone auto-verified!')
+      onVerified()
+      setStep('idle')
+      return
+    }
+    toast.success('OTP sent to your phone')
+    setStep('otp')
+  }
+
+  async function confirmOtp() {
+    if (!otp.trim()) return
+    setBusy(true)
+    const res = await fetch('/api/verify/phone/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone.trim(), code: otp.trim() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setBusy(false)
+    if (!res.ok) { toast.error(data.error ?? 'Invalid OTP'); return }
+    toast.success('Phone verified!')
+    onVerified()
+    setStep('idle')
+  }
+
+  if (step === 'idle') {
+    return (
+      <button
+        type="button"
+        onClick={() => setStep('phone')}
+        className="flex items-center gap-1.5 text-xs font-medium text-[#14a800] hover:underline"
+      >
+        Verify phone <ChevronRight className="w-3 h-3" />
+      </button>
+    )
+  }
+
+  if (step === 'phone') {
+    return (
+      <div className="flex items-center gap-2 flex-wrap justify-end">
+        <input
+          type="tel"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          placeholder="+91 98765 43210"
+          className="w-44 border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#14a800] focus:outline-none bg-transparent"
+          onKeyDown={e => e.key === 'Enter' && sendOtp()}
+        />
+        <button
+          type="button"
+          onClick={sendOtp}
+          disabled={busy || !phone.trim()}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#14a800] text-white text-xs font-semibold disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+          Send OTP
+        </button>
+        <button type="button" onClick={() => setStep('idle')} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap justify-end">
+      <input
+        type="text"
+        value={otp}
+        onChange={e => setOtp(e.target.value)}
+        placeholder="6-digit OTP"
+        maxLength={6}
+        className="w-28 border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#14a800] focus:outline-none bg-transparent tracking-widest font-mono"
+        onKeyDown={e => e.key === 'Enter' && confirmOtp()}
+      />
+      <button
+        type="button"
+        onClick={confirmOtp}
+        disabled={busy || otp.length < 6}
+        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#14a800] text-white text-xs font-semibold disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+        Verify
+      </button>
+      <button type="button" onClick={() => setStep('phone')} className="text-xs text-muted-foreground hover:text-foreground">Resend</button>
+    </div>
+  )
+}
+
+// ── Edu Email Verification Widget ─────────────────────────────────────────────
+
+function EduVerify({ onVerified }: { onVerified: () => void }) {
+  const [step, setStep]       = useState<'idle' | 'email' | 'otp'>('idle')
+  const [email, setEmail]     = useState('')
+  const [otp, setOtp]         = useState('')
+  const [busy, setBusy]       = useState(false)
+
+  async function sendOtp() {
+    if (!email.trim()) return
+    setBusy(true)
+    const res = await fetch('/api/verify/edu/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setBusy(false)
+    if (!res.ok) { toast.error(data.error ?? 'Failed to send OTP'); return }
+    toast.success('OTP sent to your inbox (check vansh0145@gmail.com in dev)')
+    setStep('otp')
+  }
+
+  async function confirmOtp() {
+    if (!otp.trim()) return
+    setBusy(true)
+    const res = await fetch('/api/verify/edu/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim() }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setBusy(false)
+    if (!res.ok) { toast.error(data.error ?? 'Invalid OTP'); return }
+    toast.success('Student email verified!')
+    onVerified()
+    setStep('idle')
+  }
+
+  if (step === 'idle') {
+    return (
+      <button
+        type="button"
+        onClick={() => setStep('email')}
+        className="flex items-center gap-1.5 text-xs font-medium text-purple-400 hover:underline"
+      >
+        Verify .edu email <ChevronRight className="w-3 h-3" />
+      </button>
+    )
+  }
+
+  if (step === 'email') {
+    return (
+      <div className="flex items-center gap-2 flex-wrap justify-end">
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="you@college.ac.in"
+          className="w-52 border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-purple-400 focus:outline-none bg-transparent"
+          onKeyDown={e => e.key === 'Enter' && sendOtp()}
+        />
+        <button
+          type="button"
+          onClick={sendOtp}
+          disabled={busy || !email.trim()}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-semibold disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+          Send OTP
+        </button>
+        <button type="button" onClick={() => setStep('idle')} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap justify-end">
+      <input
+        type="text"
+        value={otp}
+        onChange={e => setOtp(e.target.value)}
+        placeholder="6-digit OTP"
+        maxLength={6}
+        className="w-28 border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-purple-400 focus:outline-none bg-transparent tracking-widest font-mono"
+        onKeyDown={e => e.key === 'Enter' && confirmOtp()}
+      />
+      <button
+        type="button"
+        onClick={confirmOtp}
+        disabled={busy || otp.length < 6}
+        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-semibold disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+        Verify
+      </button>
+      <button type="button" onClick={() => setStep('email')} className="text-xs text-muted-foreground hover:text-foreground">Resend</button>
+    </div>
+  )
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -80,7 +291,6 @@ export default function SettingsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Focus the confirm input when modal opens
   useEffect(() => {
     if (showDeleteModal) {
       setConfirmText('')
@@ -160,22 +370,59 @@ export default function SettingsPage() {
                   : '—'}
               </span>
             </Row>
-            <Row label="Identity">
-              <div className="flex items-center gap-2 flex-wrap justify-end">
-                {profile?.phone_verified ? (
-                  <span className="flex items-center gap-1 text-xs font-medium text-[#14a800]">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Phone verified
+          </div>
+        </section>
+
+        {/* ── Identity Verification ─────────────────────────────────── */}
+        <section className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="flex items-center gap-2.5 px-6 py-4 border-b border-border">
+            <Shield className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Identity Verification</h2>
+          </div>
+          <div className="px-6 py-5 space-y-5">
+            {/* Phone */}
+            <Row
+              label={
+                <span className="flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5" />Phone
+                </span>
+              }
+            >
+              {profile?.phone_verified ? (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-[#14a800]">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                </span>
+              ) : (
+                <PhoneVerify
+                  onVerified={() => setProfile(p => p ? { ...p, phone_verified: true } : p)}
+                />
+              )}
+            </Row>
+
+            {/* Edu email — show for freelancers and guests, not clients */}
+            {profile?.role !== 'client' && (
+              <Row
+                label={
+                  <span className="flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5" />Student email
+                  </span>
+                }
+              >
+                {profile?.edu_verified ? (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-purple-400">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified
                   </span>
                 ) : (
-                  <span className="text-xs text-[var(--faint)]">Phone not verified</span>
+                  <EduVerify
+                    onVerified={() => setProfile(p => p ? { ...p, edu_verified: true } : p)}
+                  />
                 )}
-                {profile?.edu_verified ? (
-                  <span className="flex items-center gap-1 text-xs font-medium text-[#14a800]">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Edu verified
-                  </span>
-                ) : null}
-              </div>
-            </Row>
+              </Row>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              Verification badges appear on your profile and proposal cards, increasing your chances of being hired.
+            </p>
           </div>
         </section>
 
@@ -222,7 +469,7 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* ── Security placeholder ─────────────────────────────────── */}
+        {/* ── Security ─────────────────────────────────────────────── */}
         <section className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="flex items-center gap-2.5 px-6 py-4 border-b border-border">
             <Shield className="w-4 h-4 text-muted-foreground" />
@@ -280,7 +527,6 @@ export default function SettingsPage() {
             aria-modal="true"
             aria-labelledby="delete-modal-title"
           >
-            {/* Modal header */}
             <div className="flex items-start gap-4 px-6 pt-6 pb-5">
               <div className="w-10 h-10 rounded-full bg-red-950/50 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -323,7 +569,7 @@ export default function SettingsPage() {
                   onChange={e => setConfirmText(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && canConfirm) handleDeleteAccount() }}
                   placeholder={CONFIRM_PHRASE}
-                  className="w-full border border-border rounded-lg px-3.5 py-2.5 text-sm text-foreground placeholder:text-[var(--faint)] focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 transition-colors"
+                  className="w-full border border-border rounded-lg px-3.5 py-2.5 text-sm text-foreground placeholder:text-[var(--faint)] focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 transition-colors bg-transparent"
                   autoComplete="off"
                   spellCheck={false}
                 />

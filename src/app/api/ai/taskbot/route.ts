@@ -146,15 +146,15 @@ ${ratingLine}
 ${extraContext ? `\nContext data:\n${extraContext}` : ''}
 
 Your behavior:
-- Be warm, concise, and genuinely helpful
-- Max 3 short paragraphs unless listing jobs
-- Always end with a follow-up question or a concrete next step
-- For job listings, present them clearly with the link on each line
+- STRICT: max 2 sentences of prose. No walls of text.
+- Use bullet points (•) for any list of 2+ items — never run them into a sentence
+- Always use numbers from the Context data above when answering about stats, connects, earnings — never guess
+- For job listings: one bullet per job with title, budget, and link
 - Use ₹ for all currency
-- If a guest asks to do something requiring login, kindly say they need to sign up
-- ${isFreelancer ? 'Help this freelancer find work, improve their profile, and earn more' : ''}
-- ${isClient ? 'Help this client find the best talent and run their project smoothly' : ''}
-- ${isGuest ? 'Introduce TaskPay warmly and encourage them to sign up' : ''}
+- If a guest asks to do something requiring login, say in one sentence they need to sign up
+- ${isFreelancer ? 'Help this freelancer find work and earn more' : ''}
+- ${isClient ? 'Help this client find the right talent fast' : ''}
+- ${isGuest ? 'Introduce TaskPay warmly and encourage sign-up' : ''}
 Today's date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
 }
 
@@ -204,16 +204,22 @@ export async function POST(request: NextRequest) {
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content ?? ''
   const intent = detectIntent(lastUserMsg)
 
+  // Always fetch real user stats when logged in so connects/earnings are never stale
   let extraContext = ''
   try {
+    const fetchPromises: Promise<string>[] = []
+
+    if (ctx.id) fetchPromises.push(fetchUserStats(ctx.id))
+
     if (intent === 'job_search') {
-      extraContext = 'Matching jobs:\n' + await fetchMatchingJobs(ctx.skills ?? [])
+      fetchPromises.push(fetchMatchingJobs(ctx.skills ?? []).then(r => 'Matching jobs:\n' + r))
     } else if (intent === 'budget_query') {
       const keyword = lastUserMsg.replace(/budget|how much|price|rate|cost|charge|worth/gi, '').trim().slice(0, 40)
-      extraContext = await fetchMarketRates(keyword)
-    } else if (intent === 'stats_query' && ctx.id) {
-      extraContext = await fetchUserStats(ctx.id)
+      fetchPromises.push(fetchMarketRates(keyword))
     }
+
+    const results = await Promise.all(fetchPromises)
+    extraContext = results.filter(Boolean).join('\n')
   } catch { /* best-effort */ }
 
   const systemPrompt = buildSystemPrompt(ctx, extraContext)
@@ -227,8 +233,8 @@ export async function POST(request: NextRequest) {
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: groqMessages,
-      max_tokens: 500,
-      temperature: 0.75,
+      max_tokens: 250,
+      temperature: 0.65,
     })
 
     const reply = completion.choices[0]?.message?.content?.trim() ?? 'Sorry, I could not generate a response. Please try again.'
