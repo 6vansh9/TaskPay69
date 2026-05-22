@@ -357,11 +357,19 @@ export default function ContractPage({ params }: { params: Promise<{ id: string 
               <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" /> Reviews
               </h3>
-              {!reviewed && (
-                <button onClick={() => setShowReview(true)} className="btn btn-primary btn-sm">
-                  Leave a Review
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/contracts/${id}/certificate`}
+                  className="flex items-center gap-1.5 btn btn-secondary btn-sm"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#14a800]" /> View Certificate
+                </Link>
+                {!reviewed && (
+                  <button onClick={() => setShowReview(true)} className="btn btn-primary btn-sm">
+                    Leave a Review
+                  </button>
+                )}
+              </div>
             </div>
             <ReviewList revieweeId={isClient ? (contract.freelancer_id ?? '') : (contract.client_id ?? '')} />
           </div>

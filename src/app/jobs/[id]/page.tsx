@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer'
 import { formatCurrency, timeAgo } from '@/lib/utils'
 import { Briefcase, Clock, MapPin, Star, Users, ChevronRight, Shield, CheckCircle2, XCircle } from 'lucide-react'
 import ClientJobOwnerView from '@/components/jobs/ClientJobOwnerView'
+import WithdrawProposalButton from '@/components/proposals/WithdrawProposalButton'
 
 const LEVEL_LABEL: Record<string, string> = { entry: 'Entry Level', intermediate: 'Intermediate', expert: 'Expert' }
 
@@ -66,9 +67,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   // Check if user already applied
   let alreadyApplied = false
+  let existingProposalId: string | null = null
+  let existingProposalStatus: string | null = null
   if (user) {
-    const { data: existing } = await supabase.from('proposals').select('id').eq('job_id', id).eq('freelancer_id', user.id).single()
-    alreadyApplied = !!existing
+    const { data: existing } = await supabase.from('proposals').select('id, status').eq('job_id', id).eq('freelancer_id', user.id).maybeSingle()
+    if (existing) {
+      alreadyApplied = true
+      existingProposalId = (existing as { id: string; status: string }).id
+      existingProposalStatus = (existing as { id: string; status: string }).status
+    }
   }
 
   // Get freelancer profile for skill match
@@ -223,11 +230,18 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <div className="card p-5">
                 {alreadyApplied ? (
                   <div className="text-center">
-                    <div className="w-10 h-10 rounded-full bg-[#14a800/20] flex items-center justify-center mx-auto mb-2">
+                    <div className="w-10 h-10 rounded-full bg-[#14a800]/20 flex items-center justify-center mx-auto mb-2">
                       <Shield className="w-5 h-5 text-[#14a800]" />
                     </div>
                     <p className="font-semibold text-foreground mb-1">Proposal submitted</p>
-                    <p className="text-xs text-muted-foreground">You&apos;ve already applied to this job.</p>
+                    <p className="text-xs text-muted-foreground">
+                      {existingProposalStatus === 'pending' ? 'Under review by the client.' : `Status: ${existingProposalStatus}`}
+                    </p>
+                    {existingProposalStatus === 'pending' && existingProposalId && (
+                      <div className="flex justify-center">
+                        <WithdrawProposalButton proposalId={existingProposalId} jobId={id} />
+                      </div>
+                    )}
                   </div>
                 ) : !user ? (
                   <>

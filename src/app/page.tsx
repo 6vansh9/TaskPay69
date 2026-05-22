@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { ArrowRight, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, GraduationCap, Briefcase, ShieldCheck, CheckCircle2, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import LiveStats from '@/components/landing/LiveStats'
 
 const TRENDING = [
   { name: 'AI Video',         change: 318,   dir: 'up'   as const },
@@ -185,6 +186,13 @@ export default function LandingPage() {
               <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent" />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Live Stats Bar ──────────────────────────────────────── */}
+      <section className="border-b border-white/8 py-5 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-8 text-center">
+          <LiveStats />
         </div>
       </section>
 

@@ -106,7 +106,7 @@ export default async function DashboardPage() {
   let freelancerNotifications: { id: string; title: string; created_at: string; type: string; link: string | null }[] = []
   let earningsTxns: { created_at: string; net_amount: number }[] = []
   let proposalStats = { total: 0, hired: 0 }
-  let jobAlerts: { id: string; title: string; budget_min: number | null; budget_max: number | null; budget_type: string; created_at: string }[] = []
+  let jobAlerts: { id: string; title: string; budget_min: number | null; budget_max: number | null; budget_type: string; created_at: string; skills?: string[] | null }[] = []
 
   if (isFreelancer) {
     const freelancerSkills = p.skills ?? []
@@ -130,12 +130,12 @@ export default async function DashboardPage() {
       supabase.from('proposals').select('*', { count: 'exact', head: true }).eq('freelancer_id', user.id),
       supabase.from('proposals').select('*', { count: 'exact', head: true }).eq('freelancer_id', user.id).eq('status', 'hired'),
       freelancerSkills.length > 0
-        ? supabase.from('jobs').select('id, title, budget_min, budget_max, budget_type, created_at')
+        ? supabase.from('jobs').select('id, title, budget_min, budget_max, budget_type, created_at, skills')
             .eq('status', 'open')
             .overlaps('skills', freelancerSkills)
             .order('created_at', { ascending: false })
             .limit(4)
-        : supabase.from('jobs').select('id, title, budget_min, budget_max, budget_type, created_at')
+        : supabase.from('jobs').select('id, title, budget_min, budget_max, budget_type, created_at, skills')
             .eq('status', 'open')
             .order('created_at', { ascending: false })
             .limit(4),
@@ -517,32 +517,42 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* Row 3: Quick Apply — Job Alerts */}
+            {/* Row 3: Jobs You Might Like */}
             {jobAlerts.length > 0 && (
               <div className="card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-[#14a800]" />
-                    <h2 className="text-sm font-semibold text-foreground">Quick Apply — Jobs Matching Your Skills</h2>
+                    <h2 className="text-sm font-semibold text-foreground">Jobs You Might Like</h2>
                   </div>
                   <Link href="/jobs" className="text-xs text-[#14a800] hover:underline">Browse all</Link>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {jobAlerts.map(job => {
+                    const freelancerSkillsLower = (p.skills ?? []).map((s: string) => s.toLowerCase())
+                    const jobSkills = (job.skills ?? []) as string[]
+                    const matchCount = jobSkills.filter(s => freelancerSkillsLower.includes(s.toLowerCase())).length
+                    const matchPct = jobSkills.length > 0 ? Math.round((matchCount / jobSkills.length) * 100) : 0
                     const budget = job.budget_type === 'fixed'
                       ? `₹${(job.budget_min ?? 0).toLocaleString('en-IN')} – ₹${(job.budget_max ?? 0).toLocaleString('en-IN')}`
                       : `₹${(job.budget_min ?? 0).toLocaleString('en-IN')}/hr`
                     return (
-                      <Link key={job.id} href={`/jobs/${job.id}/apply`}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:border-[#14a800]/50 hover:bg-[#14a800]/5 transition-colors group">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{job.title}</p>
-                          <p className="text-xs text-[#14a800] font-semibold">{budget}</p>
+                      <div key={job.id}
+                        className="flex flex-col gap-2 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:border-[#14a800]/50 hover:bg-[#14a800]/5 transition-colors">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-medium text-foreground truncate flex-1">{job.title}</p>
+                          {matchPct > 0 && (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${matchPct >= 70 ? 'bg-[#14a800]/15 text-[#14a800]' : 'bg-amber-500/15 text-amber-400'}`}>
+                              {matchPct}% match
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs font-semibold text-[#14a800] bg-[#14a800]/10 px-2.5 py-1 rounded-full whitespace-nowrap group-hover:bg-[#14a800]/20 transition-colors">
-                          Apply →
-                        </span>
-                      </Link>
+                        <p className="text-xs text-[#14a800] font-semibold">{budget}</p>
+                        <Link href={`/jobs/${job.id}/apply`}
+                          className="mt-1 text-xs font-semibold text-center py-1.5 rounded-lg bg-[#14a800]/10 text-[#14a800] hover:bg-[#14a800]/20 transition-colors">
+                          Apply Now →
+                        </Link>
+                      </div>
                     )
                   })}
                 </div>
