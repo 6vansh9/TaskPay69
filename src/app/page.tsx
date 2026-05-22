@@ -496,7 +496,7 @@ export default function LandingPage() {
               {/* Social links */}
               <div className="flex flex-wrap gap-3">
                 <a
-                  href="https://www.linkedin.com/in/vanshaggarwal-4114b6329"
+                  href="https://www.linkedin.com/in/vansh-aggarwal-4114b6329/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-[#a3a3a3] transition-all hover:text-white"
