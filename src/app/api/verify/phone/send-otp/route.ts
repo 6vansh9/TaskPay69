@@ -43,9 +43,10 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        route: 'otp',
-        variables_values: otp,
+        route: 'q',
+        message: 'Your TaskPay verification code is ' + otp + '. Valid for 10 minutes. Do not share this code.',
         numbers: cleanPhone,
+        flash: 0,
       }),
     })
 
