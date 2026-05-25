@@ -112,7 +112,7 @@ export default function ChatWindow({ conversationId, currentUserId, otherParty }
 
     if (!res.ok) { toast.error(data.error ?? 'Upload failed'); return }
     setPendingAttachment({ url: data.url, name: data.name })
-    toast.success('File ready — send the message to attach it.')
+    toast.success('File ready. Send the message to attach it.')
     inputRef.current?.focus()
   }
 

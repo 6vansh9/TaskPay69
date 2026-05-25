@@ -29,7 +29,7 @@ export default function VerificationNudge({ phoneVerified, eduVerified, role }: 
       <div className="bg-amber-950/30 border border-amber-900/50 rounded-xl p-4 flex items-start gap-3 mb-6">
         <ShieldCheck className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-800">Boost your credibility — get verified</p>
+          <p className="text-sm font-semibold text-amber-800">Boost your credibility, get verified</p>
           <p className="text-xs text-amber-700 mt-0.5">
             Verified freelancers get 2× more responses. Complete verification to stand out.
           </p>

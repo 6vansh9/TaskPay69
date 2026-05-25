@@ -187,7 +187,7 @@ export async function sendHiredEmail(opts: {
       Congratulations, ${opts.freelancerName}! 🎉
     </h1>
     <p style="margin:0 0 24px;font-size:15px;color:#b0b0b0;line-height:1.7">
-      <strong style="color:#f0f0f0">${opts.clientName}</strong> has hired you. Your contract is now active — head over to review the details and get started.
+      <strong style="color:#f0f0f0">${opts.clientName}</strong> has hired you. Your contract is now active. Head over to review the details and get started.
     </p>
 
     ${statsTable([
@@ -198,7 +198,7 @@ export async function sendHiredEmail(opts: {
 
     <div style="background:rgba(20,168,0,0.06);border:1px solid rgba(20,168,0,0.2);border-radius:10px;padding:14px 16px;margin:0 0 4px">
       <p style="margin:0;font-size:13px;color:#a0a0a0;line-height:1.6">
-        <span style="color:#14a800;font-weight:700">🔒 Escrow protected</span> — payment is held securely and released only after you complete the work and the client approves.
+        <span style="color:#14a800;font-weight:700">🔒 Escrow protected.</span> Payment is held securely and released only after you complete the work and the client approves.
       </p>
     </div>
 
@@ -247,7 +247,7 @@ export async function sendPaymentReceivedEmail(opts: {
 
     <div style="background:rgba(20,168,0,0.06);border:1px solid rgba(20,168,0,0.2);border-radius:10px;padding:14px 16px;margin:0 0 4px">
       <p style="margin:0;font-size:13px;color:#a0a0a0;line-height:1.6">
-        <span style="color:#14a800;font-weight:700">⏱ Transfer in progress</span> — funds will arrive in your linked bank account within <strong style="color:#f0f0f0">2–3 business days</strong>.
+        <span style="color:#14a800;font-weight:700">⏱ Transfer in progress.</span> Funds will arrive in your linked bank account within <strong style="color:#f0f0f0">2–3 business days</strong>.
       </p>
     </div>
 
@@ -397,7 +397,7 @@ export async function sendDisputeEmail(opts: {
 
     <div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:10px;padding:14px 16px;margin:0 0 4px">
       <p style="margin:0;font-size:13px;color:#a0a0a0;line-height:1.6">
-        <span style="color:#f87171;font-weight:700">⏸ Contract on hold</span> — our admin team will review and resolve the dispute within <strong style="color:#f0f0f0">48–72 hours</strong>.
+        <span style="color:#f87171;font-weight:700">⏸ Contract on hold.</span> Our admin team will review and resolve the dispute within <strong style="color:#f0f0f0">48–72 hours</strong>.
       </p>
     </div>
 
@@ -457,7 +457,7 @@ export async function sendDisputeResolvedEmail(opts: {
 
   resend.emails.send({
     from: FROM, to: TO,
-    subject: `Dispute resolved — "${opts.jobTitle}" ${opts.isWinner ? '(in your favour)' : ''}`,
+    subject: `Dispute resolved: "${opts.jobTitle}" ${opts.isWinner ? '(in your favour)' : ''}`,
     html,
   }).catch(() => {})
 }
@@ -477,7 +477,7 @@ export async function sendAdminDisputeAlertEmail(opts: {
   const html = layout(`
     <div style="margin-bottom:20px">${badge('Admin Alert')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f87171;line-height:1.3">
-      ⚠️ New Dispute — Action Required
+      ⚠️ New Dispute: Action Required
     </h1>
     <p style="margin:0 0 24px;font-size:15px;color:#b0b0b0;line-height:1.7">
       A dispute has been raised and requires immediate admin review.

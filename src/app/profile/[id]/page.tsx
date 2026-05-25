@@ -75,10 +75,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const desc  = profile.bio ? profile.bio.slice(0, 155) + (profile.bio.length > 155 ? '…' : '') : `${name} is a ${title} on TaskPay.`
   const image = profile.avatar_url ?? '/hero-hire.jpg'
   return {
-    title: `${name} — ${title}`,
+    title: `${name}: ${title}`,
     description: desc,
-    openGraph: { title: `${name} — ${title} | TaskPay`, description: desc, images: [{ url: image, width: 400, height: 400, alt: name }] },
-    twitter: { title: `${name} — ${title} | TaskPay`, description: desc, images: [image] },
+    openGraph: { title: `${name}: ${title} | TaskPay`, description: desc, images: [{ url: image, width: 400, height: 400, alt: name }] },
+    twitter: { title: `${name}: ${title} | TaskPay`, description: desc, images: [image] },
     alternates: { canonical: `https://taskpay69.vercel.app/profile/${id}` },
   }
 }

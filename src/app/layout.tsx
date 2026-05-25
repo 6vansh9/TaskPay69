@@ -23,7 +23,7 @@ const bricolage = Bricolage_Grotesque({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://taskpay69.vercel.app'),
-  title: { default: 'TaskPay — Hire Top Freelancers', template: '%s | TaskPay' },
+  title: { default: 'TaskPay: Hire Top Freelancers', template: '%s | TaskPay' },
   description: 'Connect with skilled freelancers and get your projects done. Post a job, receive proposals, and pay securely with escrow.',
   icons: { icon: '/favicon.png', apple: '/icon-192.png' },
   manifest: '/manifest.json',
@@ -35,13 +35,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'TaskPay',
-    title: 'TaskPay — Hire Top Freelancers',
+    title: 'TaskPay: Hire Top Freelancers',
     description: 'Connect with skilled freelancers and get your projects done. Post a job, receive proposals, and pay securely with escrow.',
-    images: [{ url: '/hero-hire.jpg', width: 1200, height: 630, alt: 'TaskPay — Freelance Marketplace' }],
+    images: [{ url: '/hero-hire.jpg', width: 1200, height: 630, alt: 'TaskPay Freelance Marketplace' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TaskPay — Hire Top Freelancers',
+    title: 'TaskPay: Hire Top Freelancers',
     description: 'Connect with skilled freelancers and get your projects done.',
     images: ['/hero-hire.jpg'],
   },

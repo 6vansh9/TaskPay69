@@ -205,7 +205,7 @@ export default function ContractPage({ params }: { params: Promise<{ id: string 
       <Header />
       {/* TEST MODE banner */}
       <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-1.5 text-center pointer-events-none select-none">
-        <span className="text-amber-400 text-xs font-bold tracking-widest uppercase">⚠ Test Mode — Payments are simulated</span>
+        <span className="text-amber-400 text-xs font-bold tracking-widest uppercase">⚠ Test Mode: Payments are simulated</span>
       </div>
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}

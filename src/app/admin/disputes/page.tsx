@@ -266,7 +266,7 @@ function AiAnalysisCard({
               />
             </div>
             {analysis.confidence < 60 && (
-              <p className="text-[10px] text-yellow-500">Low confidence — manual review recommended.</p>
+              <p className="text-[10px] text-yellow-500">Low confidence. Manual review recommended.</p>
             )}
           </div>
         </div>
@@ -367,7 +367,7 @@ export default function AdminDisputesPage() {
     const mode = recommendation === 'pay_freelancer' ? 'freelancer'
       : recommendation === 'refund_client' ? 'client' : 'split'
 
-    const aiNote = `[AI-assisted resolution — confidence ${analysis.confidence}%]\n\n${reasoning}`
+    const aiNote = `[AI-assisted resolution, confidence ${analysis.confidence}%]\n\n${reasoning}`
 
     setResolve({
       disputeId,
@@ -470,7 +470,7 @@ export default function AdminDisputesPage() {
         <div className="card p-12 text-center">
           <CheckCheck className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
           <p className="text-muted-foreground">
-            {filter === 'open' ? 'No open disputes — all clear!' : 'No disputes found.'}
+            {filter === 'open' ? 'No open disputes, all clear!' : 'No disputes found.'}
           </p>
         </div>
       ) : (
@@ -619,9 +619,9 @@ export default function AdminDisputesPage() {
                 {resolve.mode === 'client'     && <XCircle className="w-5 h-5 text-red-400" />}
                 {resolve.mode === 'split'      && <Scale className="w-5 h-5 text-blue-400" />}
                 <h2 className="text-lg font-bold text-foreground">
-                  {resolve.mode === 'freelancer' && 'Resolve — Pay Freelancer'}
-                  {resolve.mode === 'client'     && 'Resolve — Refund Client'}
-                  {resolve.mode === 'split'      && 'Resolve — Split Payment'}
+                  {resolve.mode === 'freelancer' && 'Resolve: Pay Freelancer'}
+                  {resolve.mode === 'client'     && 'Resolve: Refund Client'}
+                  {resolve.mode === 'split'      && 'Resolve: Split Payment'}
                 </h2>
               </div>
               <p className="text-sm text-muted-foreground">Both parties will be notified.</p>
@@ -647,7 +647,7 @@ export default function AdminDisputesPage() {
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="Explain the decision — shared with both parties."
+                  placeholder="Explain the decision, shared with both parties."
                   value={resolve.resolution}
                   onChange={e => setResolve(r => r ? { ...r, resolution: e.target.value } : r)}
                   className="input w-full text-sm resize-none"

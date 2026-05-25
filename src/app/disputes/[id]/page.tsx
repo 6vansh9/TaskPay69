@@ -590,9 +590,9 @@ export default function DisputeDetailPage({ params }: { params: Promise<{ id: st
                   {resolveMode === 'client'     && <XCircle className="w-5 h-5 text-red-400" />}
                   {resolveMode === 'split'      && <Scale className="w-5 h-5 text-blue-400" />}
                   <h2 className="text-lg font-bold text-foreground">
-                    {resolveMode === 'freelancer' && 'Resolve — Pay Freelancer'}
-                    {resolveMode === 'client'     && 'Resolve — Refund Client'}
-                    {resolveMode === 'split'      && 'Resolve — Split Payment'}
+                    {resolveMode === 'freelancer' && 'Resolve: Pay Freelancer'}
+                    {resolveMode === 'client'     && 'Resolve: Refund Client'}
+                    {resolveMode === 'split'      && 'Resolve: Split Payment'}
                   </h2>
                 </div>
                 <p className="text-sm text-muted-foreground">Both parties will be notified by email and in-app.</p>
@@ -620,7 +620,7 @@ export default function DisputeDetailPage({ params }: { params: Promise<{ id: st
 
               <div>
                 <label className="label">Resolution note <span className="text-red-400">*</span></label>
-                <textarea rows={4} placeholder="Explain the decision — shared with both parties."
+                <textarea rows={4} placeholder="Explain the decision, shared with both parties."
                   value={resolution} onChange={e => setResolution(e.target.value)}
                   className="input w-full text-sm resize-none" />
               </div>

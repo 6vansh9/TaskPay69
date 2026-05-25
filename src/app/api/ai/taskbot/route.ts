@@ -67,7 +67,7 @@ async function fetchMatchingJobs(skills: string[]): Promise<string> {
 interface JobRow { id: string; title: string; budget_min: number | null; budget_max: number | null; budget_type: string | null; skills_required: string[] | null }
 
 function formatJobs(jobs: JobRow[]): string {
-  if (!jobs.length) return 'No open jobs found right now — check back soon!'
+  if (!jobs.length) return 'No open jobs found right now. Check back soon!'
   return jobs.map(j => {
     const budget = j.budget_type === 'hourly'
       ? `₹${j.budget_min ?? 0}–₹${j.budget_max ?? 0}/hr`
@@ -127,7 +127,7 @@ function buildSystemPrompt(ctx: UserCtx, extraContext = ''): string {
   const jobsLine     = ctx.jobsDone ? `Jobs completed: ${ctx.jobsDone}` : ''
   const ratingLine   = ctx.rating ? `Rating: ${ctx.rating.toFixed(1)}` : ''
 
-  return `You are TaskBot, the friendly AI assistant for TaskPay — India's first student-centric freelance marketplace.
+  return `You are TaskBot, the friendly AI assistant for TaskPay, India's first student-centric freelance marketplace.
 
 Platform facts:
 - TaskPay uses escrow payments: client funds are held safely and released only after work approval
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!groq) {
-    return NextResponse.json({ reply: "I'm offline right now — GROQ_API_KEY not configured. Please try again later." })
+    return NextResponse.json({ reply: "I'm offline right now. GROQ_API_KEY not configured. Please try again later." })
   }
 
   // Optionally enrich context from auth

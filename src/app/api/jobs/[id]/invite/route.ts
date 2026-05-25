@@ -54,7 +54,7 @@ export async function POST(
   const { error } = await supabaseAdmin.from('notifications').insert({
     user_id: freelancer_id,
     type: 'proposal',
-    title: `You've been invited to apply — "${job.title}"`,
+    title: `You've been invited to apply for: "${job.title}"`,
     link: `/jobs/${jobId}`,
   })
 

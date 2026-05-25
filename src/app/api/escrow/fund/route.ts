@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }),
     supabase.from('notifications').insert({
       user_id: contract.freelancer_id,
-      title: '🎉 Escrow funded — start working!',
+      title: '🎉 Escrow funded. Start working!',
       message: `Client has deposited ₹${amount.toLocaleString()} into escrow. You can start working on the project.`,
       type: 'payment',
       link: `/contracts/${contract_id}`,

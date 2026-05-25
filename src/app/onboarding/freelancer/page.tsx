@@ -330,7 +330,7 @@ export default function FreelancerOnboarding() {
   const STEP_HEADINGS = [
     'Tell clients about yourself',
     'What work are you here to do?',
-    'Almost done — a few final details',
+    'Almost done, a few final details',
   ]
   const STEP_SUBS = [
     "It's the first thing clients see, so make a great impression.",
@@ -442,7 +442,7 @@ export default function FreelancerOnboarding() {
                 Your professional role <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-[var(--faint)] mb-2">
-                It&apos;s the very first thing clients see — describe your expertise in your own words.
+                It&apos;s the very first thing clients see. Describe your expertise in your own words.
               </p>
               <div className="relative">
                 <input
@@ -567,7 +567,7 @@ export default function FreelancerOnboarding() {
                   <div className="flex items-center justify-between mt-1.5">
                     <span className={`text-xs font-medium ${bio.trim().length < 100 ? 'text-amber-500' : 'text-[#14a800]'}`}>
                       {bio.trim().length < 100
-                        ? `${bio.trim().length}/100 minimum — keep going!`
+                        ? `${bio.trim().length}/100 minimum, keep going!`
                         : `✓ ${bio.trim().length} characters`}
                     </span>
                     <span className="text-xs text-[var(--faint)]">{bio.length}/600</span>
@@ -814,7 +814,7 @@ export default function FreelancerOnboarding() {
                 )}
               </div>
               <p className="text-sm text-[var(--faint)] mb-4">
-                Showcase your best work — freelancers with portfolios are hired 9× more often.
+                Showcase your best work. Freelancers with portfolios are hired 9× more often.
               </p>
 
               {portfolio.length === 0 ? (
@@ -927,7 +927,7 @@ export default function FreelancerOnboarding() {
                     onChange={e => { setEduInstInput(e.target.value); setEducationInstitution(e.target.value); setShowEduInstSuggestions(true) }}
                     onFocus={() => setShowEduInstSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowEduInstSuggestions(false), 150)}
-                    placeholder="Institution — e.g. IIT Delhi" />
+                    placeholder="Institution, e.g. IIT Delhi" />
                   {showEduInstSuggestions && eduInstInput.trim() && (() => {
                     const filtered = INSTITUTIONS.filter(i => i.toLowerCase().includes(eduInstInput.toLowerCase())).slice(0, 6)
                     return filtered.length > 0 ? (

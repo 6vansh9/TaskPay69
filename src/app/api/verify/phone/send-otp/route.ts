@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const { phone } = body as { phone?: string }
   if (!phone || !/^\+[1-9]\d{6,14}$/.test(phone)) {
     return NextResponse.json(
-      { error: 'Invalid phone number. Use E.164 format — e.g. +919876543210' },
+      { error: 'Invalid phone number. Use E.164 format, e.g. +919876543210' },
       { status: 400 }
     )
   }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   // Sandbox: Twilio keys not configured — auto-verify so demo works without real SMS
   if (!twilioClient) {
     await supabase.from('profiles').update({ phone_verified: true }).eq('id', user.id)
-    return NextResponse.json({ sandbox: true, message: 'Sandbox mode — phone auto-verified (no Twilio keys).' })
+    return NextResponse.json({ sandbox: true, message: 'Sandbox mode: phone auto-verified (no Twilio keys).' })
   }
 
   const result = await sendVerification(phone)

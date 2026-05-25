@@ -194,7 +194,7 @@ function ProposalsContent() {
 
             {sort === 'best_match' && jobSkills.length === 0 && !isLoading && (
               <p className="text-xs text-muted-foreground pt-1">
-                No skills on this job — verified freelancers ranked first.
+                No skills listed. Verified freelancers ranked first.
               </p>
             )}
           </div>

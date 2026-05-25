@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       type: 'purchase',
       amount: connects,
       package: pkg,
-      description: `${label} pack — ${connects} connects`,
+      description: `${label} pack: ${connects} connects`,
     }),
     supabase.from('notifications').insert({
       user_id: user.id,

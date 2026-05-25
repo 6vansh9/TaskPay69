@@ -26,7 +26,7 @@ export default function EduVerifyModal({ onClose, onVerified }: Props) {
     setLoading(false)
     if (!res.ok) { toast.error(data.error); return }
     if (data.sandbox) {
-      toast.success(`Sandbox OTP: ${data.otp} — auto-verified!`)
+      toast.success(`Sandbox OTP: ${data.otp}, auto-verified!`)
       onVerified(); return
     }
     setStep('enter_code')

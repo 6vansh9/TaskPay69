@@ -67,7 +67,7 @@ export default function EscrowModal({ contractId, jobTitle, amount, freelancerNa
 
         {/* TEST MODE banner */}
         <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-xs font-bold text-amber-400 tracking-widest uppercase">⚠ Test Mode — No real payment processed</span>
+          <span className="text-xs font-bold text-amber-400 tracking-widest uppercase">⚠ Test Mode: No real payment processed</span>
         </div>
 
         {/* Header */}
@@ -132,7 +132,7 @@ export default function EscrowModal({ contractId, jobTitle, amount, freelancerNa
             <div className="px-5 mt-4 space-y-3">
               {method === 'upi' && (
                 <input className={inputCls} value={upiId} onChange={e => setUpiId(e.target.value)}
-                  placeholder="Enter UPI ID — e.g. name@upi" />
+                  placeholder="Enter UPI ID, e.g. name@upi" />
               )}
               {method === 'card' && (
                 <>

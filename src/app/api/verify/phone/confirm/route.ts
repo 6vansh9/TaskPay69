@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const phoneHash = hashValue(phone)
   if (!profile || profile.phone_hash !== phoneHash) {
     return NextResponse.json(
-      { error: 'Phone number mismatch — please send an OTP first.' },
+      { error: 'Phone number mismatch. Please send an OTP first.' },
       { status: 400 }
     )
   }

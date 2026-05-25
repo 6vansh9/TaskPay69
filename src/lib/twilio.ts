@@ -34,7 +34,7 @@ function twilioErrorMessage(err: unknown): string {
       60203: 'Maximum send attempts reached. Try again in 10 minutes.',
       60204: 'Too many incorrect codes. Request a new OTP.',
       60223: 'Verification already approved.',
-      20003: 'Twilio authentication error — check your API credentials.',
+      20003: 'Twilio authentication error. Check your API credentials.',
       20429: 'Too many requests. Try again in a moment.',
     }
     if (map[code]) return map[code]

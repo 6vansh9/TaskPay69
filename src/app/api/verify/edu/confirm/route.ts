@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found.' }, { status: 404 })
     if ((profile.edu_email ?? '').toLowerCase().trim() !== email) {
-      return NextResponse.json({ error: 'Email mismatch — please request a new OTP.' }, { status: 400 })
+      return NextResponse.json({ error: 'Email mismatch. Please request a new OTP.' }, { status: 400 })
     }
     if (profile.edu_verified) {
       return NextResponse.json({ error: 'Already verified.' }, { status: 409 })

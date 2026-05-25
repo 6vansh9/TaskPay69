@@ -41,7 +41,7 @@ const IN_DEMAND = [
 
 const TESTIMONIALS = [
   {
-    quote: "TaskPay isn't just a hiring platform for us — it's a strategic partner. It's helped fill every technical gap, accelerating our delivery from months to weeks.",
+    quote: "TaskPay isn't just a hiring platform for us. It's a strategic partner. It's helped fill every technical gap, accelerating our delivery from months to weeks.",
     name: 'Rahul Sharma',
     title: 'Co-founder, CEO · NovaTech',
     initials: 'RS',
@@ -118,7 +118,7 @@ export default function LandingPage() {
                     Grow at the speed<br />of your ambition
                   </h1>
                   <p className="mt-6 max-w-lg text-lg leading-relaxed text-foreground/75 md:text-xl">
-                    Hire experts who use AI to amplify their skills — turning complex work into results, fast.
+                    Hire experts who use AI to amplify their skills, turning complex work into results, fast.
                   </p>
                 </>
               ) : (
@@ -308,9 +308,9 @@ export default function LandingPage() {
                 SKILLS DESERVE TO BE PAID
               </h2>
               <div className="mt-6 space-y-4 text-[15px] leading-[1.75] text-[#a3a3a3]">
-                <p>Every student has a skill. Every skill deserves a paycheck. TaskPay was born from a simple frustration — being a college student with real skills but no way to monetize them.</p>
+                <p>Every student has a skill. Every skill deserves a paycheck. TaskPay was born from a simple frustration: being a college student with real skills but no way to monetize them.</p>
                 <p>We applied to dozens of internships. Got ignored. So we built the solution ourselves.</p>
-                <p>TaskPay is India&apos;s first student-centric freelance marketplace — built by a student, for students. Whether you design, code, write, or create — there is a client waiting for you right here.</p>
+                <p>TaskPay is India&apos;s first student-centric freelance marketplace, built by a student, for students. Whether you design, code, write, or create, there is a client waiting for you right here.</p>
               </div>
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-white">Student-First Platform</h3>
               <p className="mt-3 text-sm leading-relaxed text-[#a3a3a3]">
-                Built specifically for college and school students. No experience required — just skills and dedication to deliver great work.
+                Built specifically for college and school students. No experience required, just skills and dedication to deliver great work.
               </p>
             </div>
 
@@ -345,7 +345,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-white">Real Projects, Real Pay</h3>
               <p className="mt-3 text-sm leading-relaxed text-[#a3a3a3]">
-                Connect with real clients who need real work. From logo design to web development — every skill has demand and every project pays.
+                Connect with real clients who need real work. From logo design to web development, every skill has demand and every project pays.
               </p>
             </div>
 
@@ -356,7 +356,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-white">Secure Escrow Payments</h3>
               <p className="mt-3 text-sm leading-relaxed text-[#a3a3a3]">
-                Get paid safely. Your money is held in escrow until you deliver — no more working for free and hoping clients pay.
+                Get paid safely. Your money is held in escrow until you deliver. No more working for free and hoping clients pay.
               </p>
             </div>
           </div>
@@ -403,7 +403,7 @@ export default function LandingPage() {
                 <h3 className="text-lg font-semibold text-white">Zero Experience Required</h3>
               </div>
               <p className="text-sm leading-relaxed text-[#a3a3a3]">
-                Traditional platforms ignore beginners. We give students their first shot — because everyone starts somewhere.
+                Traditional platforms ignore beginners. We give students their first shot, because everyone starts somewhere.
               </p>
             </div>
 
@@ -414,7 +414,7 @@ export default function LandingPage() {
                 <h3 className="text-lg font-semibold text-white">AI-Powered Tools</h3>
               </div>
               <p className="text-sm leading-relaxed text-[#a3a3a3]">
-                AI-assisted bio writing, cover letter generation, and smart job matching — because students deserve the best tools too.
+                AI-assisted bio writing, cover letter generation, and smart job matching, because students deserve the best tools too.
               </p>
             </div>
           </div>
@@ -446,7 +446,7 @@ export default function LandingPage() {
                 >
                   <Image
                     src="/founder.jpeg"
-                    alt="Vansh Aggarwal — Founder of TaskPay"
+                    alt="Vansh Aggarwal, Founder of TaskPay"
                     fill
                     className="object-cover object-top"
                     sizes="280px"
@@ -479,7 +479,7 @@ export default function LandingPage() {
               <div className="space-y-4 text-[15px] leading-[1.8] text-[#a3a3a3]">
                 <p>
                   I built TaskPay because I know the frustration firsthand. As a CSE student at Manipal, I applied
-                  to dozens of internships and got ignored — not because I lacked skills, but because I lacked
+                  to dozens of internships and got ignored, not because I lacked skills, but because I lacked
                   experience on paper.
                 </p>
                 <p>
@@ -639,7 +639,7 @@ export default function LandingPage() {
               <div className="rounded-2xl border border-white/12 bg-white/4 p-8">
                 <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-4">TaskPay Starter</p>
                 <h3 className="text-xl font-semibold leading-snug mb-3">
-                  Hire skilled talent fast — without long-term commitments or extra overhead
+                  Hire skilled talent fast, without long-term commitments or extra overhead
                 </h3>
                 <p className="text-sm text-foreground/55 mb-8">
                   Post jobs, review proposals, and pay only when work is approved. No subscription needed.

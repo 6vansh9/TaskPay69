@@ -107,7 +107,7 @@ export default function ConnectsPage() {
         id: crypto.randomUUID(),
         type: 'purchase',
         amount: data.added,
-        description: `${pkg.label} pack — ${pkg.connects} connects`,
+        description: `${pkg.label} pack: ${pkg.connects} connects`,
         package: pkg.key,
         created_at: new Date().toISOString(),
       }
@@ -178,7 +178,7 @@ export default function ConnectsPage() {
           {/* Test mode banner */}
           <div className="bg-amber-500/8 border border-amber-500/25 rounded-xl px-4 py-2.5 mb-5 flex items-center gap-2">
             <span className="text-amber-400 text-xs font-bold tracking-widest uppercase">⚠ Demo Mode</span>
-            <span className="text-amber-400/70 text-xs">— Purchases are simulated, no real payment is charged</span>
+            <span className="text-amber-400/70 text-xs">Purchases are simulated, no real payment is charged</span>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4">

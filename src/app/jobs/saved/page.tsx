@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { Bookmark } from 'lucide-react'
 import type { JobWithProfile } from '@/lib/hooks'
 
-export const metadata: Metadata = { title: 'Saved Jobs — TaskPay' }
+export const metadata: Metadata = { title: 'Saved Jobs | TaskPay' }
 
 export default async function SavedJobsPage() {
   const supabase = await createClient()

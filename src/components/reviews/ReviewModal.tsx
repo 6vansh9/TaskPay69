@@ -105,7 +105,7 @@ export default function ReviewModal({ contractId, revieweeName, onClose, onSubmi
               onChange={e => setComment(e.target.value)}
               className="input w-full resize-none"
             />
-            <p className="text-xs text-[var(--faint)] mt-1">{comment.length}/500 — minimum 10 characters</p>
+            <p className="text-xs text-[var(--faint)] mt-1">{comment.length}/500, minimum 10 characters</p>
           </div>
 
           <button onClick={submit} disabled={loading || rating === 0} className="btn btn-primary w-full">

@@ -229,7 +229,7 @@ export default function CertificatePage({ params }: { params: Promise<{ id: stri
               {cert.rating ? (
                 <StarRow n={cert.rating} />
               ) : (
-                <p className="text-sm text-white/40">—</p>
+                <p className="text-sm text-white/40">No rating</p>
               )}
             </div>
             <div className="text-center">

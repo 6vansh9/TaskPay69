@@ -33,7 +33,7 @@ export default function Error({
 
         <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
         <p className="text-white/50 text-sm mb-8 leading-relaxed">
-          We hit an unexpected error. Try refreshing the page — if the issue persists, contact support.
+          We hit an unexpected error. Try refreshing the page. If the issue persists, contact support.
         </p>
 
         <div className="flex items-center justify-center gap-3">

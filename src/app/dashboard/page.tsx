@@ -322,7 +322,7 @@ export default async function DashboardPage() {
               <p className="text-sm font-semibold text-amber-300">
                 {clientStats.pendingApprovals} contract{clientStats.pendingApprovals > 1 ? 's' : ''} waiting for your approval
               </p>
-              <p className="text-xs text-amber-500/70">Freelancer has submitted work — review and release payment.</p>
+              <p className="text-xs text-amber-500/70">Freelancer has submitted work. Review and release payment.</p>
             </div>
             <ChevronRight className="w-4 h-4 text-amber-400" />
           </Link>

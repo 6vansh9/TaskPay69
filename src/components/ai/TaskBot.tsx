@@ -365,7 +365,7 @@ export default function TaskBot() {
               </button>
             </div>
             <p className="text-[10px] text-gray-700 text-center mt-2">
-              AI can make mistakes — verify important info
+              AI can make mistakes. Verify important info
             </p>
           </div>
         </div>
