@@ -5,10 +5,12 @@ const VALID_DOMAINS = ['.edu', '.ac.in', '.ac.uk', '.edu.in']
 
 function makeTransporter() {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      user: process.env.BREVO_SMTP_LOGIN,
+      pass: process.env.BREVO_SMTP_PASSWORD,
     },
   })
 }
@@ -47,16 +49,16 @@ export async function POST(request: Request) {
       return Response.json({ error: dbError.message }, { status: 500 })
     }
 
-    // Sandbox: no Gmail credentials configured
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.warn('GMAIL_USER / GMAIL_APP_PASSWORD not set — returning OTP in response for dev')
-      return Response.json({ sandbox: true, otp, message: 'Sandbox mode: OTP returned directly (no Gmail config).' })
+    // Sandbox: no Brevo credentials configured
+    if (!process.env.BREVO_SMTP_LOGIN || !process.env.BREVO_SMTP_PASSWORD) {
+      console.warn('BREVO_SMTP_LOGIN / BREVO_SMTP_PASSWORD not set — returning OTP in response for dev')
+      return Response.json({ sandbox: true, otp, message: 'Sandbox mode: OTP returned directly (no Brevo config).' })
     }
 
     const transporter = makeTransporter()
 
     await transporter.sendMail({
-      from: `"TaskPay" <${process.env.GMAIL_USER}>`,
+      from: '"TaskPay" <taskpaystudents@gmail.com>',
       to: email,
       subject: 'TaskPay Student Verification Code',
       html: `

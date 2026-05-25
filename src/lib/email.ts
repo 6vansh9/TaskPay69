@@ -1,30 +1,41 @@
 import nodemailer from 'nodemailer'
 
-const FROM  = `"TaskPay" <${process.env.GMAIL_USER ?? 'taskpaystudents@gmail.com'}>`
+const transporter = nodemailer.createTransport({
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.BREVO_SMTP_LOGIN,
+    pass: process.env.BREVO_SMTP_PASSWORD,
+  },
+})
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+}: {
+  to: string
+  subject: string
+  html: string
+}) {
+  try {
+    await transporter.sendMail({
+      from: '"TaskPay" <taskpaystudents@gmail.com>',
+      to,
+      subject,
+      html,
+    })
+    return { success: true }
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Email error:', msg)
+    return { success: false, error: msg }
+  }
+}
+
 const ADMIN = process.env.ADMIN_EMAIL ?? 'vansh0145@gmail.com'
 const APP   = process.env.NEXT_PUBLIC_APP_URL ?? 'https://taskpay69.vercel.app'
-
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  })
-}
-
-async function send(to: string, subject: string, html: string) {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn(`[email] Gmail not configured — skipping: ${subject} → ${to}`)
-    return
-  }
-  try {
-    await getTransporter().sendMail({ from: FROM, to, subject, html })
-  } catch (err) {
-    console.error(`[email] Failed to send "${subject}" to ${to}:`, err)
-  }
-}
 
 function inr(n: number) {
   return '₹' + n.toLocaleString('en-IN')
@@ -180,7 +191,7 @@ export async function sendWelcomeEmail(opts: {
     </p>
   `)
 
-  await send(opts.recipientEmail, `Welcome to TaskPay, ${opts.recipientName}! 🎉`, html)
+  await sendEmail({ to: opts.recipientEmail, subject: `Welcome to TaskPay, ${opts.recipientName}! 🎉`, html })
 }
 
 // ── 2. Hired notification ─────────────────────────────────────────────────────
@@ -222,7 +233,7 @@ export async function sendHiredEmail(opts: {
     </p>
   `)
 
-  await send(opts.freelancerEmail, `🎉 You've been hired for "${opts.jobTitle}"`, html)
+  await sendEmail({ to: opts.freelancerEmail, subject: `🎉 You've been hired for "${opts.jobTitle}"`, html })
 }
 
 // ── 3. Payment received ───────────────────────────────────────────────────────
@@ -266,7 +277,7 @@ export async function sendPaymentReceivedEmail(opts: {
     </p>
   `)
 
-  await send(opts.freelancerEmail, `💰 ${inr(opts.netAmount)} payment approved for "${opts.jobTitle}"`, html)
+  await sendEmail({ to: opts.freelancerEmail, subject: `💰 ${inr(opts.netAmount)} payment approved for "${opts.jobTitle}"`, html })
 }
 
 // ── 4. Review request ─────────────────────────────────────────────────────────
@@ -329,7 +340,7 @@ export async function sendReviewRequestEmail(opts: {
     </p>
   `)
 
-  await send(opts.recipientEmail, `⭐ Leave a review for "${opts.jobTitle}"`, html)
+  await sendEmail({ to: opts.recipientEmail, subject: `⭐ Leave a review for "${opts.jobTitle}"`, html })
 }
 
 // ── 5. Proposal received ──────────────────────────────────────────────────────
@@ -358,7 +369,7 @@ export async function sendProposalReceivedEmail(opts: {
     </p>
   `)
 
-  await send(opts.clientEmail, `New proposal from ${opts.freelancerName} on "${opts.jobTitle}"`, html)
+  await sendEmail({ to: opts.clientEmail, subject: `New proposal from ${opts.freelancerName} on "${opts.jobTitle}"`, html })
 }
 
 // ── 6. Dispute raised (party notice) ─────────────────────────────────────────
@@ -400,7 +411,7 @@ export async function sendDisputeEmail(opts: {
     </p>
   `)
 
-  await send(opts.partyEmail, `Dispute raised on "${opts.jobTitle}"`, html)
+  await sendEmail({ to: opts.partyEmail, subject: `Dispute raised on "${opts.jobTitle}"`, html })
 }
 
 // ── 7. Dispute resolved ───────────────────────────────────────────────────────
@@ -441,7 +452,7 @@ export async function sendDisputeResolvedEmail(opts: {
     </p>
   `)
 
-  await send(opts.partyEmail, `Dispute resolved: "${opts.jobTitle}" ${opts.isWinner ? '(in your favour)' : ''}`, html)
+  await sendEmail({ to: opts.partyEmail, subject: `Dispute resolved: "${opts.jobTitle}" ${opts.isWinner ? '(in your favour)' : ''}`, html })
 }
 
 // ── 8. Admin dispute alert ────────────────────────────────────────────────────
@@ -474,8 +485,7 @@ export async function sendAdminDisputeAlertEmail(opts: {
     ${cta('Review Dispute →', `${APP}/admin/disputes`)}
   `)
 
-  // Admin alert always goes to admin inbox
-  await send(ADMIN, `⚠️ Dispute raised on "${opts.jobTitle}" by ${opts.raisedByName}`, html)
+  await sendEmail({ to: ADMIN, subject: `⚠️ Dispute raised on "${opts.jobTitle}" by ${opts.raisedByName}`, html })
 }
 
 // ── 9. Payout processed ───────────────────────────────────────────────────────
@@ -509,7 +519,7 @@ export async function sendWithdrawalPaidEmail(opts: {
     </p>
   `)
 
-  await send(opts.freelancerEmail, `💸 Payout of ${inr(opts.amount)} processed`, html)
+  await sendEmail({ to: opts.freelancerEmail, subject: `💸 Payout of ${inr(opts.amount)} processed`, html })
 }
 
 // ── 10. Contract created (both parties) ──────────────────────────────────────
@@ -539,9 +549,8 @@ export async function sendContractCreatedEmail(opts: {
     </p>
   `)
 
-  // Send to both parties
   await Promise.all([
-    send(opts.clientEmail,     `Contract started: "${opts.jobTitle}"`, html),
-    send(opts.freelancerEmail, `Contract started: "${opts.jobTitle}"`, html),
+    sendEmail({ to: opts.clientEmail,     subject: `Contract started: "${opts.jobTitle}"`, html }),
+    sendEmail({ to: opts.freelancerEmail, subject: `Contract started: "${opts.jobTitle}"`, html }),
   ])
 }
