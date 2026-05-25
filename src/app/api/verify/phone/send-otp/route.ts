@@ -34,36 +34,23 @@ export async function POST(request: Request) {
       return Response.json({ error: dbError.message }, { status: 500 })
     }
 
-    const cleanPhone = phone.replace('+91', '').replace(/\s/g, '').replace(/-/g, '')
+    const cleanPhone = phone.replace('+91', '')
+      .replace(/\s/g, '').replace(/-/g, '')
 
-    const smsResponse = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-      method: 'POST',
-      headers: {
-        'authorization': process.env.FAST2SMS_API_KEY!,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        route: 'q',
-        message: 'Your TaskPay verification code is ' + otp + '. Valid for 10 minutes. Do not share this code.',
-        numbers: cleanPhone,
-        flash: 0,
-      }),
-    })
+    const smsResponse = await fetch(
+      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${cleanPhone}/${otp}/OTP1`,
+      { method: 'GET' }
+    )
 
     const smsResult = await smsResponse.json()
-    console.log('Fast2SMS response:', smsResult)
 
-    if (!smsResult.return) {
-      console.error('Fast2SMS error:', smsResult)
+    if (smsResult.Status !== 'Success') {
       return Response.json({
-        error: 'Failed to send SMS: ' + (smsResult.message || 'Unknown error'),
+        error: 'Failed to send SMS',
       }, { status: 500 })
     }
 
-    return Response.json({
-      success: true,
-      message: 'OTP sent to your phone number',
-    })
+    return Response.json({ success: true })
 
   } catch (err: unknown) {
     console.error('UNEXPECTED ERROR:', err)
