@@ -1,55 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { hashValue, sendVerification, twilioClient } from '@/lib/twilio'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
-export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(request: Request) {
+  try {
+    const { phone } = await request.json()
 
-  const body = await request.json().catch(() => ({}))
-  const { phone } = body as { phone?: string }
-  if (!phone || !/^\+[1-9]\d{6,14}$/.test(phone)) {
-    return NextResponse.json(
-      { error: 'Invalid phone number. Use E.164 format, e.g. +919876543210' },
-      { status: 400 }
-    )
+    if (!phone) {
+      return Response.json({ error: 'Phone required' }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return Response.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+
+    const { error: dbError } = await supabaseAdmin
+      .from('otp_requests')
+      .insert({
+        user_id: user.id,
+        otp_code: otp,
+        otp_type: 'phone',
+        otp_expires_at: expiresAt,
+        otp_attempts: 0,
+      })
+
+    if (dbError) {
+      console.error('DB Error:', dbError)
+      return Response.json({ error: dbError.message }, { status: 500 })
+    }
+
+    const cleanPhone = phone.replace('+91', '').replace(/\s/g, '').replace(/-/g, '')
+
+    const smsResponse = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+      method: 'POST',
+      headers: {
+        'authorization': process.env.FAST2SMS_API_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        route: 'otp',
+        variables_values: otp,
+        numbers: cleanPhone,
+      }),
+    })
+
+    const smsResult = await smsResponse.json()
+    console.log('Fast2SMS response:', smsResult)
+
+    if (!smsResult.return) {
+      console.error('Fast2SMS error:', smsResult)
+      return Response.json({
+        error: 'Failed to send SMS: ' + (smsResult.message || 'Unknown error'),
+      }, { status: 500 })
+    }
+
+    return Response.json({
+      success: true,
+      message: 'OTP sent to your phone number',
+    })
+
+  } catch (err: unknown) {
+    console.error('UNEXPECTED ERROR:', err)
+    return Response.json({ error: err instanceof Error ? err.message : 'Internal server error' }, { status: 500 })
   }
-
-  const phoneHash = hashValue(phone)
-
-  // Rate limit: max 3 sends per phone per hour
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-  const { count } = await supabase
-    .from('otp_requests')
-    .select('*', { count: 'exact', head: true })
-    .eq('type', 'phone')
-    .eq('target_hash', phoneHash)
-    .gte('created_at', oneHourAgo)
-
-  if ((count ?? 0) >= 3) {
-    return NextResponse.json(
-      { error: 'Too many OTP requests. Please wait an hour before trying again.' },
-      { status: 429 }
-    )
-  }
-
-  // Store phone hash on profile (marks phone as pending, not yet verified)
-  await supabase.from('profiles').update({ phone_hash: phoneHash }).eq('id', user.id)
-
-  // Log request for rate limiting
-  await supabase.from('otp_requests').insert({ type: 'phone', target_hash: phoneHash })
-
-  // Sandbox: Twilio keys not configured — auto-verify so demo works without real SMS
-  if (!twilioClient) {
-    await supabase.from('profiles').update({ phone_verified: true }).eq('id', user.id)
-    return NextResponse.json({ sandbox: true, message: 'Sandbox mode: phone auto-verified (no Twilio keys).' })
-  }
-
-  const result = await sendVerification(phone)
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error ?? 'Failed to send OTP' }, { status: 422 })
-  }
-
-  return NextResponse.json({ success: true })
 }
