@@ -1,12 +1,30 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-const resend = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_REPLACE_ME'
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null
+const FROM  = `"TaskPay" <${process.env.GMAIL_USER ?? 'taskpaystudents@gmail.com'}>`
+const ADMIN = process.env.ADMIN_EMAIL ?? 'vansh0145@gmail.com'
+const APP   = process.env.NEXT_PUBLIC_APP_URL ?? 'https://taskpay69.vercel.app'
 
-const FROM = process.env.RESEND_FROM ?? 'TaskPay <onboarding@resend.dev>'
-const TO   = process.env.ADMIN_EMAIL  ?? 'vansh0145@gmail.com'
-const APP  = process.env.NEXT_PUBLIC_APP_URL ?? 'https://taskpay.in'
+function getTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+}
+
+async function send(to: string, subject: string, html: string) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.warn(`[email] Gmail not configured — skipping: ${subject} → ${to}`)
+    return
+  }
+  try {
+    await getTransporter().sendMail({ from: FROM, to, subject, html })
+  } catch (err) {
+    console.error(`[email] Failed to send "${subject}" to ${to}:`, err)
+  }
+}
 
 function inr(n: number) {
   return '₹' + n.toLocaleString('en-IN')
@@ -101,7 +119,6 @@ export async function sendWelcomeEmail(opts: {
   recipientName: string
   role: 'freelancer' | 'client'
 }) {
-  if (!resend) return
   const isFreelancer = opts.role === 'freelancer'
   const html = layout(`
     <p style="margin:0 0 6px;font-size:13px;color:#888888">Hey ${opts.recipientName},</p>
@@ -163,11 +180,7 @@ export async function sendWelcomeEmail(opts: {
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `Welcome to TaskPay, ${opts.recipientName}! 🎉`,
-    html,
-  }).catch(() => {})
+  await send(opts.recipientEmail, `Welcome to TaskPay, ${opts.recipientName}! 🎉`, html)
 }
 
 // ── 2. Hired notification ─────────────────────────────────────────────────────
@@ -180,7 +193,6 @@ export async function sendHiredEmail(opts: {
   contractId: string
   agreedRate: number
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('New Contract')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f0f0f0;line-height:1.3">
@@ -206,15 +218,11 @@ export async function sendHiredEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.freelancerEmail}
+      This notification was sent to ${opts.freelancerEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `🎉 You've been hired for "${opts.jobTitle}"`,
-    html,
-  }).catch(() => {})
+  await send(opts.freelancerEmail, `🎉 You've been hired for "${opts.jobTitle}"`, html)
 }
 
 // ── 3. Payment received ───────────────────────────────────────────────────────
@@ -229,7 +237,6 @@ export async function sendPaymentReceivedEmail(opts: {
   platformFee: number
   netAmount: number
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('Payment Approved')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f0f0f0;line-height:1.3">
@@ -255,15 +262,11 @@ export async function sendPaymentReceivedEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.freelancerEmail}
+      This notification was sent to ${opts.freelancerEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `💰 ${inr(opts.netAmount)} payment approved for "${opts.jobTitle}"`,
-    html,
-  }).catch(() => {})
+  await send(opts.freelancerEmail, `💰 ${inr(opts.netAmount)} payment approved for "${opts.jobTitle}"`, html)
 }
 
 // ── 4. Review request ─────────────────────────────────────────────────────────
@@ -276,7 +279,6 @@ export async function sendReviewRequestEmail(opts: {
   contractId: string
   role: 'freelancer' | 'client'
 }) {
-  if (!resend) return
   const isFreelancer = opts.role === 'freelancer'
   const html = layout(`
     <div style="text-align:center;padding:8px 0 20px">
@@ -293,7 +295,6 @@ export async function sendReviewRequestEmail(opts: {
       }
     </p>
 
-    <!-- Star rating row -->
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px">
       <tr>
         <td align="center">
@@ -324,15 +325,11 @@ export async function sendReviewRequestEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.recipientEmail}
+      This notification was sent to ${opts.recipientEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `⭐ Leave a review for "${opts.jobTitle}"`,
-    html,
-  }).catch(() => {})
+  await send(opts.recipientEmail, `⭐ Leave a review for "${opts.jobTitle}"`, html)
 }
 
 // ── 5. Proposal received ──────────────────────────────────────────────────────
@@ -344,7 +341,6 @@ export async function sendProposalReceivedEmail(opts: {
   jobTitle: string
   jobId: string
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('New Proposal')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f0f0f0;line-height:1.3">
@@ -358,15 +354,11 @@ export async function sendProposalReceivedEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.clientEmail}
+      This notification was sent to ${opts.clientEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `New proposal from ${opts.freelancerName} on "${opts.jobTitle}"`,
-    html,
-  }).catch(() => {})
+  await send(opts.clientEmail, `New proposal from ${opts.freelancerName} on "${opts.jobTitle}"`, html)
 }
 
 // ── 6. Dispute raised (party notice) ─────────────────────────────────────────
@@ -379,7 +371,6 @@ export async function sendDisputeEmail(opts: {
   contractId: string
   reason: string
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('Dispute Notice')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f0f0f0;line-height:1.3">
@@ -405,15 +396,11 @@ export async function sendDisputeEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.partyEmail}
+      This notification was sent to ${opts.partyEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `Dispute raised on "${opts.jobTitle}"`,
-    html,
-  }).catch(() => {})
+  await send(opts.partyEmail, `Dispute raised on "${opts.jobTitle}"`, html)
 }
 
 // ── 7. Dispute resolved ───────────────────────────────────────────────────────
@@ -427,7 +414,6 @@ export async function sendDisputeResolvedEmail(opts: {
   winner: 'client' | 'freelancer'
   isWinner: boolean
 }) {
-  if (!resend) return
   const winColor  = opts.isWinner ? '#14a800' : '#f87171'
   const winBg     = opts.isWinner ? 'rgba(20,168,0,0.06)' : 'rgba(248,113,113,0.06)'
   const winBorder = opts.isWinner ? 'rgba(20,168,0,0.2)' : 'rgba(248,113,113,0.2)'
@@ -451,15 +437,11 @@ export async function sendDisputeResolvedEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.partyEmail}
+      This notification was sent to ${opts.partyEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `Dispute resolved: "${opts.jobTitle}" ${opts.isWinner ? '(in your favour)' : ''}`,
-    html,
-  }).catch(() => {})
+  await send(opts.partyEmail, `Dispute resolved: "${opts.jobTitle}" ${opts.isWinner ? '(in your favour)' : ''}`, html)
 }
 
 // ── 8. Admin dispute alert ────────────────────────────────────────────────────
@@ -473,7 +455,6 @@ export async function sendAdminDisputeAlertEmail(opts: {
   contractId: string
   disputeId: string
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('Admin Alert')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f87171;line-height:1.3">
@@ -493,11 +474,8 @@ export async function sendAdminDisputeAlertEmail(opts: {
     ${cta('Review Dispute →', `${APP}/admin/disputes`)}
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `⚠️ Dispute raised on "${opts.jobTitle}" by ${opts.raisedByName}`,
-    html,
-  }).catch(() => {})
+  // Admin alert always goes to admin inbox
+  await send(ADMIN, `⚠️ Dispute raised on "${opts.jobTitle}" by ${opts.raisedByName}`, html)
 }
 
 // ── 9. Payout processed ───────────────────────────────────────────────────────
@@ -508,7 +486,6 @@ export async function sendWithdrawalPaidEmail(opts: {
   amount: number
   method: string
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('Payout Processed')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f0f0f0;line-height:1.3">
@@ -528,15 +505,11 @@ export async function sendWithdrawalPaidEmail(opts: {
 
     ${divider()}
     <p style="margin:0;font-size:12px;color:#555555">
-      This notification was intended for ${opts.freelancerEmail}
+      This notification was sent to ${opts.freelancerEmail}
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `💸 Payout of ${inr(opts.amount)} processed`,
-    html,
-  }).catch(() => {})
+  await send(opts.freelancerEmail, `💸 Payout of ${inr(opts.amount)} processed`, html)
 }
 
 // ── 10. Contract created (both parties) ──────────────────────────────────────
@@ -549,7 +522,6 @@ export async function sendContractCreatedEmail(opts: {
   jobTitle: string
   contractId: string
 }) {
-  if (!resend) return
   const html = layout(`
     <div style="margin-bottom:20px">${badge('Contract Started')}</div>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f0f0f0;line-height:1.3">
@@ -567,9 +539,9 @@ export async function sendContractCreatedEmail(opts: {
     </p>
   `)
 
-  resend.emails.send({
-    from: FROM, to: TO,
-    subject: `Contract started: "${opts.jobTitle}"`,
-    html,
-  }).catch(() => {})
+  // Send to both parties
+  await Promise.all([
+    send(opts.clientEmail,     `Contract started: "${opts.jobTitle}"`, html),
+    send(opts.freelancerEmail, `Contract started: "${opts.jobTitle}"`, html),
+  ])
 }
