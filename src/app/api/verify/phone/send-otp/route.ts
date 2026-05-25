@@ -37,16 +37,25 @@ export async function POST(request: Request) {
     const cleanPhone = phone.replace('+91', '')
       .replace(/\s/g, '').replace(/-/g, '')
 
-    const smsResponse = await fetch(
-      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${cleanPhone}/${otp}/OTP1`,
-      { method: 'GET' }
-    )
+    const smsResponse = await fetch('https://api.msg91.com/api/v5/otp', {
+      method: 'POST',
+      headers: {
+        'authkey': process.env.MSG91_AUTH_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        template_id: process.env.MSG91_TEMPLATE_ID,
+        mobile: '91' + cleanPhone,
+        otp: otp,
+      }),
+    })
 
     const smsResult = await smsResponse.json()
+    console.log('MSG91 response:', smsResult)
 
-    if (smsResult.Status !== 'Success') {
+    if (smsResult.type !== 'success') {
       return Response.json({
-        error: 'Failed to send SMS',
+        error: 'Failed to send SMS: ' + JSON.stringify(smsResult),
       }, { status: 500 })
     }
 
