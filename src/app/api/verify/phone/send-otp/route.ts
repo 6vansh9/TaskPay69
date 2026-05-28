@@ -59,12 +59,13 @@ export async function POST(request: Request) {
     })
 
     const smsResult = await smsResponse.json()
+    console.log('MSG91 full response:', JSON.stringify(smsResult))
     console.log('STEP 5 - sms sent successfully:', smsResult)
 
     if (smsResult.type !== 'success') {
-      console.error('MSG91 error:', smsResult)
+      console.error('MSG91 error:', JSON.stringify(smsResult))
       return Response.json({
-        error: 'Failed to send SMS: ' + JSON.stringify(smsResult),
+        error: 'SMS failed: ' + (smsResult.message || JSON.stringify(smsResult)),
       }, { status: 500 })
     }
 
