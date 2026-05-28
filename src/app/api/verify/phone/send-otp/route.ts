@@ -16,7 +16,10 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    console.log('Step 1: Got user', user?.id)
+    console.log('STEP 1 - user:', user?.id)
+
+    const userEmail = user.email ?? 'unknown'
+    console.log('STEP 2 - profile email:', userEmail)
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
@@ -31,54 +34,44 @@ export async function POST(request: Request) {
         otp_attempts: 0,
       })
 
-    console.log('Step 2: DB insert result', dbError)
+    console.log('STEP 3 - otp insert error:', dbError)
 
     if (dbError) {
-      console.error('DB Error:', dbError)
       return Response.json({ error: dbError.message }, { status: 500 })
     }
 
     const cleanPhone = phone.replace('+91', '')
       .replace(/\s/g, '').replace(/-/g, '')
 
-    console.log('Step 3: Sending SMS to', cleanPhone, 'via MSG91')
+    console.log('STEP 4 - sms sending...')
 
-    try {
-      const smsResponse = await fetch('https://api.msg91.com/api/v5/otp', {
-        method: 'POST',
-        headers: {
-          'authkey': process.env.MSG91_AUTH_KEY!,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          template_id: process.env.MSG91_TEMPLATE_ID,
-          mobile: '91' + cleanPhone,
-          otp: otp,
-        }),
-      })
+    const smsResponse = await fetch('https://api.msg91.com/api/v5/otp', {
+      method: 'POST',
+      headers: {
+        'authkey': process.env.MSG91_AUTH_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        template_id: process.env.MSG91_TEMPLATE_ID,
+        mobile: '91' + cleanPhone,
+        otp: otp,
+      }),
+    })
 
-      const smsResult = await smsResponse.json()
-      console.log('Step 4: MSG91 response', smsResult)
+    const smsResult = await smsResponse.json()
+    console.log('STEP 5 - sms sent successfully:', smsResult)
 
-      if (smsResult.type !== 'success') {
-        console.error('MSG91 error:', smsResult)
-        return Response.json({
-          error: 'Failed to send SMS: ' + JSON.stringify(smsResult),
-        }, { status: 500 })
-      }
-    } catch (smsErr: unknown) {
-      console.error('SMS failed:', smsErr instanceof Error ? smsErr.message : smsErr)
-      // OTP is already in DB — return success so the user can retry SMS delivery
+    if (smsResult.type !== 'success') {
+      console.error('MSG91 error:', smsResult)
       return Response.json({
-        success: true,
-        message: 'Code generated. Check your phone shortly.',
-      })
+        error: 'Failed to send SMS: ' + JSON.stringify(smsResult),
+      }, { status: 500 })
     }
 
     return Response.json({ success: true })
 
-  } catch (err: unknown) {
-    console.error('UNEXPECTED ERROR:', err)
-    return Response.json({ error: err instanceof Error ? err.message : 'Internal server error' }, { status: 500 })
+  } catch (err: any) {
+    console.error('FATAL ERROR:', err.message, err.stack)
+    return Response.json({ error: err.message }, { status: 500 })
   }
 }
