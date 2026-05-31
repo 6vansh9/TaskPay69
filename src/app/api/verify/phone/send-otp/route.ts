@@ -8,6 +8,10 @@ const client = twilio(
 
 export async function POST(request: Request) {
   try {
+    console.log('TWILIO_SID exists:', !!process.env.TWILIO_ACCOUNT_SID)
+    console.log('TWILIO_TOKEN exists:', !!process.env.TWILIO_AUTH_TOKEN)
+    console.log('TWILIO_SERVICE exists:', !!process.env.TWILIO_VERIFY_SERVICE_SID)
+
     const { phone } = await request.json()
     if (!phone) return Response.json(
       { error: 'Phone required' }, { status: 400 }
