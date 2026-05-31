@@ -38,7 +38,7 @@ export default function PhoneVerifyModal({ onClose, onVerified }: Props) {
     setLoading(true)
     const res = await fetch('/api/verify/phone/confirm', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, code }),
+      body: JSON.stringify({ phone, otp: code }),
     })
     const data = await res.json()
     setLoading(false)
@@ -61,7 +61,7 @@ export default function PhoneVerifyModal({ onClose, onVerified }: Props) {
         <div className="p-5 space-y-4">
           {step === 'enter_phone' ? (
             <>
-              <p className="text-sm text-muted-foreground">Enter your mobile number. We'll send a one-time code via SMS.</p>
+              <p className="text-sm text-muted-foreground">We'll send a verification code to your phone number</p>
               <input
                 type="tel"
                 placeholder="+919876543210"

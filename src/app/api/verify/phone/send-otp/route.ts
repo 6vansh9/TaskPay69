@@ -1,18 +1,28 @@
 import twilio from 'twilio'
 import { createClient } from '@/lib/supabase/server'
 
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+)
+
 export async function POST(request: Request) {
   try {
     const { phone } = await request.json()
-    if (!phone) return Response.json({ error: 'Phone required' }, { status: 400 })
+    if (!phone) return Response.json(
+      { error: 'Phone required' }, { status: 400 }
+    )
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return Response.json({ error: 'Not authenticated' }, { status: 401 })
+    if (!user) return Response.json(
+      { error: 'Not authenticated' }, { status: 401 }
+    )
 
-    const formattedPhone = phone.startsWith('+') ? phone : '+91' + phone.replace(/\s/g, '')
+    const formattedPhone = phone.startsWith('+')
+      ? phone
+      : '+91' + phone.replace(/\s/g, '').replace(/-/g, '')
 
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
     const verification = await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
       .verifications.create({
@@ -20,7 +30,7 @@ export async function POST(request: Request) {
         channel: 'sms',
       })
 
-    console.log('Twilio verification status:', verification.status)
+    console.log('Twilio status:', verification.status)
 
     return Response.json({
       success: true,
@@ -28,7 +38,7 @@ export async function POST(request: Request) {
     })
 
   } catch (err: any) {
-    console.error('Twilio error:', err.message)
+    console.error('Twilio send error:', err.message)
     return Response.json({ error: err.message }, { status: 500 })
   }
 }
